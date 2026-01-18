@@ -1,0 +1,83 @@
+{
+  "name": "crytemplate",
+  "version": "0.0.1",
+  "description": "Lightweight template engine",
+  "keywords": [
+    "template"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "cryeffect Media Group",
+    "email": "info@crymg.de",
+    "url": "https://crymg.de"
+  },
+  "contributors": [
+    {
+      "name": "Peter Müller",
+      "email": "peter@crycode.de",
+      "url": "https://crycode.de"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cryMG/cryTemplate"
+  },
+  "type": "module",
+  "main": "./dist/cjs/index.cjs",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "prebuild": "rimraf dist/*",
+    "build": "tsx scripts/build.ts",
+    "build-prod": "NODE_ENV=production tsx scripts/build.ts",
+    "watch": "tsx scripts/build.ts --watch",
+    "check": "tsc --noEmit -p tsconfig.dev.json && tsc --noEmit -p scripts/tsconfig.json",
+    "lint": "eslint .",
+    "clean": "rimraf dist",
+    "release": "release-script",
+    "test:mocha": "mocha --import=tsx",
+    "test": "c8 --all --reporter=text-summary --reporter=json-summary --reporter=lcov npm run test:mocha -- ",
+    "coverage:summary": "tsx scripts/coverage-summary.ts"
+  },
+  "devDependencies": {
+    "@alcalzone/release-script": "^5.0.0",
+    "@alcalzone/release-script-plugin-license": "^4.0.0",
+    "@alcalzone/release-script-plugin-manual-review": "^4.0.0",
+    "@crycode/eslint-config": "^2.2.1",
+    "@types/chai": "^5.2.3",
+    "@types/chai-as-promised": "^8.0.2",
+    "@types/jsdom": "^27.0.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.10.9",
+    "c8": "^10.1.3",
+    "chai": "^6.2.2",
+    "chai-as-promised": "^8.0.2",
+    "esbuild": "^0.27.2",
+    "eslint": "^9.39.2",
+    "glob": "^13.0.0",
+    "jsdom": "^27.4.0",
+    "markdownlint": "^0.40.0",
+    "mocha": "^11.7.5",
+    "mocha-ctrf-json-reporter": "^0.0.10",
+    "rimraf": "^6.1.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "c8": {
+    "include": [
+      "src/**"
+    ],
+    "exclude": [
+      "test/**",
+      "dist/**",
+      "scripts/**"
+    ]
+  }
+}

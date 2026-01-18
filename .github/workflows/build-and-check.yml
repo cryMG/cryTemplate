@@ -1,0 +1,201 @@
+name: Build and code checks
+
+# Run this job on all pushes and pull requests
+# as well as tags with a semantic version
+on:
+  push:
+    branches:
+      - "*"
+    # tags are handled in deploy workflow
+  pull_request: {}
+  workflow_call: {}
+
+# Cancel previous PR/branch runs when a new commit is pushed
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  install-and-build:
+    name: Install and build
+
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Tags are needed to determine the correct version ID during build
+      - name: Fetch tags
+        run: git fetch --tags --force
+
+      - name: Use Node.js 24.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: 'npm'
+
+      - name: Cache node_modules
+        id: npm-cache
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: |
+            node_modules
+          key: ${{ runner.os }}-install-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-install-${{ env.cache-name }}-
+            ${{ runner.os }}-install-
+            ${{ runner.os }}-
+
+      - name: Install and list dependencies
+        run: |
+          npm ci
+          npm list
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          retention-days: 7
+          path: |
+            dist
+
+  lint:
+    name: Lint with eslint
+
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
+
+    needs: install-and-build
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 24.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: 'npm'
+
+      - name: Cache node_modules
+        id: npm-cache
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: |
+            node_modules
+          key: ${{ runner.os }}-install-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-install-${{ env.cache-name }}-
+            ${{ runner.os }}-install-
+            ${{ runner.os }}-
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Lint code
+        run: npm run lint
+
+  check:
+    name: Type check with TS
+
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
+
+    needs: install-and-build
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 24.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: 'npm'
+
+      - name: Cache node_modules
+        id: npm-cache
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: |
+            node_modules
+          key: ${{ runner.os }}-install-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-install-${{ env.cache-name }}-
+            ${{ runner.os }}-install-
+            ${{ runner.os }}-
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Check code
+        run: npm run check
+
+  test:
+    name: Run tests
+
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
+
+    needs: install-and-build
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 24.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: 'npm'
+
+      - name: Cache node_modules
+        id: npm-cache
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: |
+            node_modules
+          key: ${{ runner.os }}-install-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-install-${{ env.cache-name }}-
+            ${{ runner.os }}-install-
+            ${{ runner.os }}-
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Run tests
+        # run tests and write output to json file for later use
+        # use a retry loop to avoid transient failures
+        run: |
+          npm run test -- --reporter mocha-ctrf-json-reporter --reporter-option outputDir=reports,outputFile=test-results.json
+
+      - name: Publish Test Summary Results
+        run: |
+          npx github-actions-ctrf summary reports/test-results.json
+          npx github-actions-ctrf failed reports/test-results.json
+          npm run coverage:summary
+        if: always()
