@@ -65,7 +65,7 @@ jobs:
           name: build-artifacts
           retention-days: 7
           path: |
-            dist
+            dist/**
 
   lint:
     name: Lint with eslint
