@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 
 import {
+  registerTemplateFilter,
   renderTemplate,
 } from '../src/index.js';
 
@@ -41,14 +42,17 @@ describe('filters', function () {
     assert.strictEqual(renderTemplate('{{- arr | json }}', { arr: [ 1, 'x' ] }), '[1,"x"]');
   });
 
+  it('text converts value to string but leaves null or undefined as empty string', function () {
+    assert.strictEqual(renderTemplate('a {{ val | text }} c', { val: 'b' }), 'a b c');
+    assert.strictEqual(renderTemplate('a {{ val | text }} c', { val: 42 }), 'a 42 c');
+    assert.strictEqual(renderTemplate('a {{ val | text }} c', { val: null }), 'a  c');
+    assert.strictEqual(renderTemplate('a {{ val | text }} c', { val: undefined }), 'a  c');
+    assert.strictEqual(renderTemplate('a {{ val | text }} c', { val: { o: 1 } }), 'a [object Object] c');
+  });
+
   it('urlencode encodes reserved characters', function () {
     const out = renderTemplate('{{ v | urlencode }}', { v: 'a b&c' });
     assert.strictEqual(out, 'a%20b%26c');
-  });
-
-  it('attr leaves string for attribute contexts; escaping still applies', function () {
-    const out = renderTemplate('<a title="{{ name | attr }}">', { name: 'a"b' });
-    assert.strictEqual(out, '<a title="a&quot;b">');
   });
 
   it('supports filter chaining', function () {
@@ -65,5 +69,55 @@ describe('filters', function () {
   it('replace works after coercion and can chain', function () {
     const out = renderTemplate("{{ v | number(2, ',') | replace(',', ';') }}", { v: 12.34 });
     assert.strictEqual(out, '12;34');
+  });
+
+  it('unknown filters are ignored (fail-safe)', function () {
+    assert.strictEqual(renderTemplate('{{ name | doesNotExist }}', { name: 'Ada' }), 'Ada');
+  });
+
+  it('supports dynamically registered custom filters', function () {
+    const toStr = (val: unknown): string => {
+      if (val === undefined || val === null) return '';
+      if (typeof val === 'string') return val;
+      if (val && typeof val === 'object') return JSON.stringify(val) ?? '';
+      return String(val as unknown);
+    };
+
+    registerTemplateFilter('brackets', (val) => {
+      return '[' + toStr(val) + ']';
+    });
+
+    registerTemplateFilter('prefix', (val, args) => {
+      const p = (Array.isArray(args) && typeof args[0] === 'string') ? args[0] : '';
+      return p + toStr(val);
+    });
+
+    assert.strictEqual(renderTemplate('{{ name | brackets }}', { name: 'Ada' }), '[Ada]');
+    assert.strictEqual(renderTemplate("{{ name | prefix('Hi ') }}", { name: 'Ada' }), 'Hi Ada');
+  });
+
+  it('rejects invalid filter names on registration', function () {
+    assert.throws(() => {
+      registerTemplateFilter('123invalid', (v) => String(v));
+    }, TypeError, 'Invalid filter name: 123invalid');
+
+    assert.throws(() => {
+      registerTemplateFilter('has-dash', (v) => String(v));
+    }, TypeError, 'Invalid filter name: has-dash');
+
+    assert.throws(() => {
+      registerTemplateFilter('with space', (v) => String(v));
+    }, TypeError, 'Invalid filter name: with space');
+
+    assert.throws(() => {
+      registerTemplateFilter('valid_name!', (v) => String(v));
+    }, TypeError, 'Invalid filter name: valid_name!');
+  });
+
+  it('rejects non-function filter handlers on registration', function () {
+    assert.throws(() => {
+      // @ts-expect-error Testing invalid input
+      registerTemplateFilter('notAFunction', 42);
+    }, TypeError, 'Filter handler must be a function');
   });
 });

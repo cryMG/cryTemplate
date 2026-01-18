@@ -108,6 +108,11 @@ describe('template rendering', function () {
       assert.strictEqual(html, 'AB');
     });
 
+    it('null values resolve to empty string', function () {
+      const html = renderTemplate('A{{ y }}B', { y: null });
+      assert.strictEqual(html, 'AB');
+    });
+
     it('stringifies non-strings', function () {
       const html = renderTemplate('n={{ n }}, b={{ b }}, o={{ o }}', { n: 12, b: false, o: { a: 1 } });
       assert.strictEqual(html, 'n=12, b=false, o=[object Object]');

@@ -49,7 +49,13 @@ export interface TplFilter {
    * - attr(): pass-through for readability; relies on default HTML escaping later
    * - replace(old, new): literal, global replacement (no regex); empty `old` is a no-op
    */
-  name: 'upper' | 'lower' | 'trim' | 'number' | 'json' | 'urlencode' | 'attr' | 'replace';
+  /**
+   * Filter name.
+   *
+   * Built-ins: `upper`, `lower`, `trim`, `number`, `json`, `urlencode`, `attr`, `replace`.
+   * Custom filters can be registered at runtime.
+   */
+  name: string;
   /** Optional filter arguments; see the filter descriptions for accepted types and arity. */
   args?: (string | number | boolean | null)[];
 }
@@ -205,3 +211,8 @@ export interface EachFrame extends FrameBase {
 }
 
 export type Frame = IfFrame | EachFrame;
+
+/**
+ * A filter handler transforms a value using optional arguments.
+ */
+export type TemplateFilterHandler = (value: unknown, args?: (string | number | boolean | null)[]) => unknown;

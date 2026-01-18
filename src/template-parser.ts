@@ -30,6 +30,10 @@ import {
   tplResolveKey,
 } from './template-runtime.js';
 
+import {
+  applyTemplateFilters,
+} from './template-filters.js';
+
 /**
  * Checks whether a string is an identifier or dot-path identifier.
  *
@@ -238,9 +242,8 @@ export const tplParse = (tpl: string): TplNode[] => {
             for (const rf of rawFilters) {
               const mFn = /^(\w+)\s*(?:\((.*)\))?$/.exec(rf);
               if (!mFn) continue;
-              const name = mFn[1] as TplFilter['name'];
-              if (![ 'upper', 'lower', 'trim', 'number', 'json', 'urlencode', 'attr', 'replace' ].includes(name)) continue;
-              const f: TplFilter = { name } as TplFilter;
+              const name = mFn[1];
+              const f: TplFilter = { name };
               if (mFn[2] && mFn[2].trim().length > 0) {
                 // Split args by comma outside quotes
                 const argsSrc = mFn[2];
@@ -379,66 +382,7 @@ export const tplRenderNodes = (nodes: TplNode[], scopes: Record<string, unknown>
       }
       // Apply filters sequentially before final string conversion and escaping
       if (n.filters && n.filters.length > 0) {
-        for (const f of n.filters) {
-          const name = f.name;
-          if (name === 'upper') {
-            val = (val === undefined || val === null) ? '' : String(val as unknown).toUpperCase();
-          } else if (name === 'lower') {
-            val = (val === undefined || val === null) ? '' : String(val as unknown).toLowerCase();
-          } else if (name === 'trim') {
-            val = (val === undefined || val === null) ? '' : String(val as unknown).trim();
-          } else if (name === 'replace') {
-            const a0 = Array.isArray(f.args) ? f.args[0] : undefined;
-            const a1 = Array.isArray(f.args) ? f.args[1] : undefined;
-            const oldStr = (typeof a0 === 'string') ? a0 : undefined;
-            const newStr = (typeof a1 === 'string') ? a1 : '';
-            const base = (val === undefined || val === null) ? '' : String(val as unknown);
-            if (oldStr && oldStr.length > 0) {
-              // global, literal replacement (no regex), including multiple occurrences
-              val = base.split(oldStr).join(newStr);
-            } else {
-              val = base;
-            }
-          } else if (name === 'number') {
-            const firstArg = (Array.isArray(f.args) && f.args.length > 0) ? f.args[0] : undefined;
-            const secondArg = (Array.isArray(f.args) && f.args.length > 1) ? f.args[1] : undefined;
-            const thirdArg = (Array.isArray(f.args) && f.args.length > 2) ? f.args[2] : undefined;
-            const d = (typeof firstArg === 'number') ? firstArg : undefined;
-            // Semantics:
-            // - 1 arg: number(decimals)
-            // - 2 args: number(decimals, decimalSep)
-            // - 3 args: number(decimals, decimalSep, thousandsSep)
-            const decimalSep = (typeof secondArg === 'string') ? secondArg : undefined;
-            const thousandsSep = (typeof thirdArg === 'string') ? thirdArg : undefined;
-            const num = (typeof val === 'number') ? val : Number(val);
-            if (Number.isFinite(num)) {
-              const decimals = (typeof d === 'number') ? Math.max(0, Math.floor(d)) : undefined;
-              let s = (typeof decimals === 'number') ? num.toFixed(decimals) : String(num);
-              const m = /^(-?)(\d+)(?:\.(\d+))?$/.exec(s);
-              if (m) {
-                const sign = m[1] ?? '';
-                const intPart = m[2];
-                const frac = m[3] ?? '';
-                const grouped = (thousandsSep && thousandsSep.length > 0)
-                  ? intPart.replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSep)
-                  : intPart;
-                const decChar = (decimalSep ?? '.');
-                s = sign + grouped + (frac.length > 0 ? decChar + frac : '');
-              }
-              val = s;
-            } else {
-              val = (val === undefined || val === null) ? '' : String(val as unknown);
-            }
-          } else if (name === 'json') {
-            const s = JSON.stringify(val);
-            val = s ?? '';
-          } else if (name === 'urlencode') {
-            val = encodeURIComponent((val === undefined || val === null) ? '' : String(val as unknown));
-          } else if (name === 'attr') {
-            // attribute-safe: rely on default HTML escaping later; keep as-is here
-            val = (val === undefined || val === null) ? '' : String(val as unknown);
-          }
-        }
+        val = applyTemplateFilters(val, n.filters);
       }
       let str: string;
       if (typeof val === 'string') str = val;

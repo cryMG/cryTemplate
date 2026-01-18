@@ -31,14 +31,6 @@ export const tplParseTest = (s: string): TplIfTest => {
   const tokens: Tok[] = [];
   let i = 0;
 
-  /**
-   * Push a token to the tokenizer output list.
-   *
-   * @param tok - Token to append.
-   */
-  function push (tok: Tok): void {
-    tokens.push(tok);
-  }
   while (i < src.length) {
     const ch = src[i];
     // whitespace
@@ -48,47 +40,47 @@ export const tplParseTest = (s: string): TplIfTest => {
     }
     // parentheses
     if (ch === '(') {
-      push({ t: 'lparen' });
+      tokens.push({ t: 'lparen' });
       i++;
       continue;
     }
     if (ch === ')') {
-      push({ t: 'rparen' });
+      tokens.push({ t: 'rparen' });
       i++;
       continue;
     }
     // two-char logical ops
     const two = src.slice(i, i + 2);
     if (two === '&&') {
-      push({ t: 'and' });
+      tokens.push({ t: 'and' });
       i += 2;
       continue;
     }
     if (two === '||') {
-      push({ t: 'or' });
+      tokens.push({ t: 'or' });
       i += 2;
       continue;
     }
     // comparison ops (prefer 2-char)
     const twoComp = src.slice(i, i + 2);
     if (twoComp === '==' || twoComp === '!=' || twoComp === '>=' || twoComp === '<=') {
-      push({ t: 'comp', v: twoComp as TplCompareOp });
+      tokens.push({ t: 'comp', v: twoComp as TplCompareOp });
       i += 2;
       continue;
     }
     if (ch === '>' || ch === '<') {
-      push({ t: 'comp', v: ch as TplCompareOp });
+      tokens.push({ t: 'comp', v: ch as TplCompareOp });
       i++;
       continue;
     }
     // unary not '!' or word 'not'
     if (ch === '!') {
-      push({ t: 'bang' });
+      tokens.push({ t: 'bang' });
       i++;
       continue;
     }
     if (/^[Nn]ot\b/.test(src.slice(i))) {
-      push({ t: 'not' });
+      tokens.push({ t: 'not' });
       const mNot = /^not\b/i.exec(src.slice(i));
       i += (mNot ? mNot[0].length : 3);
       continue;
@@ -114,14 +106,14 @@ export const tplParseTest = (s: string): TplIfTest => {
         inner += c;
         i++;
       }
-      push({ t: 'lit', v: inner });
+      tokens.push({ t: 'lit', v: inner });
       continue;
     }
     // identifier or keyword literals (true,false,null) or number
     const rem = src.slice(i);
     const mNum = /^(?:[+-]?\d+(?:\.\d+)?)/.exec(rem);
     if (mNum) {
-      push({ t: 'lit', v: Number(mNum[0]) });
+      tokens.push({ t: 'lit', v: Number(mNum[0]) });
       i += mNum[0].length;
       continue;
     }
@@ -129,21 +121,21 @@ export const tplParseTest = (s: string): TplIfTest => {
     if (mIdent) {
       const word = mIdent[1];
       if (/^true$/i.test(word)) {
-        push({ t: 'lit', v: true });
+        tokens.push({ t: 'lit', v: true });
         i += word.length;
         continue;
       }
       if (/^false$/i.test(word)) {
-        push({ t: 'lit', v: false });
+        tokens.push({ t: 'lit', v: false });
         i += word.length;
         continue;
       }
       if (/^null$/i.test(word)) {
-        push({ t: 'lit', v: null });
+        tokens.push({ t: 'lit', v: null });
         i += word.length;
         continue;
       }
-      push({ t: 'key', v: word });
+      tokens.push({ t: 'key', v: word });
       i += word.length;
       continue;
     }
