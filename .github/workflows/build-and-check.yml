@@ -65,7 +65,7 @@ jobs:
           name: build-artifacts
           retention-days: 7
           path: |
-            dist/**
+            dist
 
   lint:
     name: Lint with eslint
@@ -104,6 +104,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
+          path: dist
 
       - name: Lint code
         run: npm run lint
@@ -145,6 +146,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
+          path: dist
 
       - name: Check code
         run: npm run check
@@ -186,6 +188,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
+          path: dist
 
       - name: Run tests
         # run tests and write output to json file for later use
