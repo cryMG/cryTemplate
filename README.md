@@ -28,6 +28,54 @@ Lightweight and safe-by-default string template engine with zero dependencies.
 * Misplaced/invalid control tokens degrade to literal text; no runtime throws for templates
 * No arbitrary JS evaluation in templates (predictable and secure by design)
 
+## Usage
+
+cryTemplate can be consumed as ESM, CJS, or directly in the browser.
+
+### ESM (Node.js / modern bundlers)
+
+```ts
+import { renderTemplate } from 'crytemplate';
+
+const out = renderTemplate('Hello {{ name | trim | upper }}!', { name: '  Alex  ' });
+// => "Hello ALEX!"
+```
+
+### CJS (Node.js require)
+
+```js
+const { renderTemplate } = require('crytemplate');
+
+const out = renderTemplate('Hello {{ name }}!', { name: 'Alex' });
+// => "Hello Alex!"
+```
+
+### Browser (no bundler)
+
+The browser bundles can be directly included via script tags:
+
+* `dist/browser/crytemplate.js`
+* `dist/browser/crytemplate.min.js`
+
+They expose a global `cryTemplate` object.
+
+```html
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script src="./crytemplate.min.js"></script>
+  </head>
+  <body>
+    <script>
+      const out = cryTemplate.renderTemplate('Hi {{ name }}!', { name: 'Alex' });
+      console.log(out);
+      // logs "Hi Alex!"
+    </script>
+  </body>
+</html>
+```
+
 ## Filters
 
 Filters can be applied to interpolations using a pipe syntax:

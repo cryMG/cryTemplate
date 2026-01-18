@@ -86,7 +86,7 @@ async function doBuild (): Promise<boolean> {
   /** return success state */
   let success = true;
 
-  const [ esmResult, cjsResult ] = await Promise.all([
+  const [ esmResult, cjsResult, browserResult, browserMinResult ] = await Promise.all([
     // ESM build
     build({
       ...buildOptions,
@@ -104,6 +104,27 @@ async function doBuild (): Promise<boolean> {
       },
     }),
 
+    // Browser build
+    build({
+      ...buildOptions,
+      outfile: './dist/browser/crytemplate.js',
+      format: 'iife',
+      platform: 'browser',
+      globalName: 'cryTemplate',
+      sourcemap: false,
+    }),
+
+    // Browser build (minified)
+    build({
+      ...buildOptions,
+      outfile: './dist/browser/crytemplate.min.js',
+      minify: true,
+      format: 'iife',
+      platform: 'browser',
+      globalName: 'cryTemplate',
+      sourcemap: false,
+    }),
+
     // .d.ts generation
     runCommand('npm', [ 'exec', '--', 'tsc', '-p', 'tsconfig.types.json' ], baseDir)
       .catch(() => { // catch errors here to not fail the whole build
@@ -115,6 +136,8 @@ async function doBuild (): Promise<boolean> {
   await Promise.all([
     fs.promises.writeFile(path.join(baseDir, 'dist', 'metaEsm.json'), JSON.stringify(esmResult.metafile, undefined, 2)),
     fs.promises.writeFile(path.join(baseDir, 'dist', 'metaCjs.json'), JSON.stringify(cjsResult.metafile, undefined, 2)),
+    fs.promises.writeFile(path.join(baseDir, 'dist', 'metaBrowser.json'), JSON.stringify(browserResult.metafile, undefined, 2)),
+    fs.promises.writeFile(path.join(baseDir, 'dist', 'metaBrowserMin.json'), JSON.stringify(browserMinResult.metafile, undefined, 2)),
   ]);
 
   const duration = Date.now() - startTime;
