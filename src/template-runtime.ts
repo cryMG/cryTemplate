@@ -14,11 +14,14 @@
 export const tplResolveFrom = (obj: unknown, path: string[]): unknown => {
   let cur: unknown = obj;
   for (const seg of path) {
-    if (cur && typeof cur === 'object' && seg in (cur as Record<string, unknown>)) {
-      cur = (cur as Record<string, unknown>)[seg];
-    } else {
-      return undefined;
-    }
+    if (!cur || typeof cur !== 'object') return undefined;
+    const rec = cur as Record<string, unknown>;
+    if (!Object.prototype.hasOwnProperty.call(rec, seg)) return undefined;
+    const desc = Object.getOwnPropertyDescriptor(rec, seg);
+    if (!desc) return undefined;
+    // Do not execute accessors (getters) during template rendering.
+    if (typeof desc.get === 'function' || typeof desc.set === 'function') return undefined;
+    cur = desc.value;
   }
   return cur;
 };
@@ -36,8 +39,12 @@ export const tplResolveKey = (scopes: Record<string, unknown>[], key: string): u
   const parts = key.split('.');
   for (let i = scopes.length - 1; i >= 0; i--) {
     const frame = scopes[i];
-    if (parts[0] in frame) {
-      return tplResolveFrom(frame[parts[0]], parts.slice(1));
+    if (Object.prototype.hasOwnProperty.call(frame, parts[0])) {
+      const desc = Object.getOwnPropertyDescriptor(frame, parts[0]);
+      if (!desc) continue;
+      // Do not execute accessors (getters) during template rendering.
+      if (typeof desc.get === 'function' || typeof desc.set === 'function') continue;
+      return tplResolveFrom(desc.value, parts.slice(1));
     }
   }
   return tplResolveFrom(scopes[0], parts);

@@ -15,6 +15,87 @@ describe('template rendering / security', function () {
     ensureDom();
   });
 
+  describe('no code execution', function () {
+    it('does not evaluate expressions or function calls inside interpolations', function () {
+      let executed = false;
+      (globalThis as unknown as { __tplPwn?: () => string }).__tplPwn = () => {
+        executed = true;
+        return 'PWN';
+      };
+
+      const out = renderTemplate('A{{ __tplPwn() }}B', {});
+      // Unsupported interpolation syntax is preserved literally.
+      assert.strictEqual(out, 'A{{ __tplPwn() }}B');
+      assert.isFalse(executed);
+    });
+
+    it('does not evaluate expressions or function calls inside if conditions', function () {
+      let executed = false;
+      (globalThis as unknown as { __tplPwnIf?: () => boolean }).__tplPwnIf = () => {
+        executed = true;
+        return true;
+      };
+
+      const tpl = '{% if __tplPwnIf() %}YES{% else %}NO{% endif %}';
+      const out = renderTemplate(tpl, {});
+
+      // Unsupported syntax must not execute code; it should not match truthy values.
+      assert.strictEqual(out, 'NO');
+      assert.isFalse(executed);
+    });
+
+    it('does not execute getters while resolving keys', function () {
+      let getterExecuted = false;
+      const data: Record<string, unknown> = {};
+      Object.defineProperty(data, 'x', {
+        enumerable: true,
+        get () {
+          getterExecuted = true;
+          return 'X';
+        },
+      });
+
+      const out = renderTemplate('v={{ x }}', data);
+      // Accessors are ignored; treat as unresolved.
+      assert.strictEqual(out, 'v=');
+      assert.isFalse(getterExecuted);
+    });
+
+    it('does not resolve values from the prototype chain', function () {
+      const proto = { secret: 'S' };
+      const data = Object.create(proto) as Record<string, unknown>;
+      const out = renderTemplate('v={{ secret }}', data);
+      assert.strictEqual(out, 'v=');
+    });
+
+    it('does not execute code via filter arguments', function () {
+      let executed = false;
+      (globalThis as unknown as { __tplPwnArg?: () => string }).__tplPwnArg = () => {
+        executed = true;
+        return 'X';
+      };
+
+      // Filter args only accept literals; function-call-like tokens must not be executed.
+      const out = renderTemplate("{{ v | replace(__tplPwnArg(), 'y') }}", { v: 'abc' });
+      assert.strictEqual(out, 'abc');
+      assert.isFalse(executed);
+    });
+
+    it('does not execute code by attempting to invoke filters from the template', function () {
+      let executed = false;
+      (globalThis as unknown as { __tplPwnFilter?: () => string }).__tplPwnFilter = () => {
+        executed = true;
+        return 'PWN';
+      };
+
+      // Even though the filter syntax looks like a call, it can only call registered filters by name.
+      // Unknown filters are ignored and must not execute any global function.
+      const out = renderTemplate('{{ v | __tplPwnFilter() }}', { v: 'abc' });
+      assert.strictEqual(out, 'abc');
+      assert.isFalse(executed);
+    });
+  });
+
   describe('fuzz/property-based', function () {
     function randStr (len: number): string {
       const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>&\"'{}_- \n\t\u00e4\u00f6\u00fc\u20ac";
