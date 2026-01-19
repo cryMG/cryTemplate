@@ -1,6 +1,7 @@
 .env
 coverage
 dist
+dist-pages
 node_modules
 reports
 *.tgz

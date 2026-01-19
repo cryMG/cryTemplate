@@ -19,6 +19,7 @@ A core design goal is **predictable output without arbitrary code execution**.
   - Day.js integration is optional via a reference setter; do not require/import Day.js at runtime.
 - **Keep ESM/CJS/browser outputs working**. Public API changes should be deliberate and backwards-compatible.
 - **Use English for code, comments, and documentation**.
+- **Keep the pages up to date** with new features and syntax.
 
 ## Coding conventions
 
@@ -54,6 +55,13 @@ Prefer the repo’s scripts:
   - Security regressions (prototype access, getters, call-like syntax)
   - Both “happy path” and malformed input
 - Keep tests deterministic (avoid real time / locale differences unless explicitly handled).
+
+## Pages
+
+- The `pages/` folder contains a simple static site for documentation and demos to be deployed via GitHub Pages.
+- Build the site with `npm run build-pages`.
+- The site uses plain HTML/CSS/JS (no frameworks). Keep it lightweight and simple.
+- Use the existing styles and layout components for consistency.
 
 ## Documentation
 

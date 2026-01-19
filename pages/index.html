@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- @partial:head -->
+  </head>
+  <body>
+    <!-- @partial:header -->
+
+    <main>
+      <section class="hero">
+        <div class="container hero__inner">
+          <div class="hero__copy">
+            <p class="eyebrow">Safe-by-default templates</p>
+            <h1>Small, predictable templates — no code execution.</h1>
+            <p class="lead">
+              <em>cryTemplate</em> is a lightweight template engine with <strong>zero runtime dependencies</strong>.
+              Interpolations are <strong>HTML-escaped by default</strong>, and templates cannot execute arbitrary JavaScript.
+            </p>
+
+            <div class="hero__actions">
+              <a class="button button--primary" href="#playground">Try the playground</a>
+              <a class="button button--ghost" href="https://github.com/cryMG/cryTemplate" target="_blank" rel="noreferrer">View on GitHub</a>
+              <a class="button button--ghost" href="https://www.npmjs.com/package/crytemplate" target="_blank" rel="noreferrer">View on npm</a>
+            </div>
+
+            <div class="hero__badges" aria-label="Quick facts">
+              <div class="badge">{{ ... }}</div>
+              <div class="badge">{% if %} / {% each %}</div>
+              <div class="badge">Fail-safe parsing</div>
+              <div class="badge">ESM</div>
+              <div class="badge">CJS</div>
+              <div class="badge">Browser bundle</div>
+              <div class="badge">License: MIT</div>
+            </div>
+          </div>
+
+          <div class="hero__card" aria-label="Example">
+            <pre class="codeblock" aria-label="Example template"><code class="language-twig">Hello {{ name | trim | upper }}!</code></pre>
+            <div class="hero__result">
+              <div class="hero__resultLabel">Result</div>
+              <div class="hero__resultValue" id="hero-result">Hello ALEX!</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="playground">
+        <div class="container">
+          <div class="section__header">
+            <h2>Live Playground</h2>
+            <p class="muted">
+              Edit the template and data. The output re-renders live in your browser using the bundled cryTemplate runtime.
+            </p>
+          </div>
+
+          <div class="playground">
+            <div class="playground__toolbar">
+              <label class="select">
+                <span class="select__label">Example</span>
+                <select id="exampleSelect" aria-label="Select example">
+                  <optgroup label="Basics">
+                    <option value="hello">Hello + filters</option>
+                    <option value="escape">Escaping vs raw</option>
+                  </optgroup>
+                  <optgroup label="Control flow">
+                    <option value="if">Conditionals</option>
+                    <option value="each">Loops</option>
+                    <option value="comments">Comments</option>
+                  </optgroup>
+                  <optgroup label="Operators & filters">
+                    <option value="fallbacks">Fallbacks (|| vs ??)</option>
+                    <option value="filters">Filter recipes</option>
+                  </optgroup>
+                  <optgroup label="Data & layout">
+                    <option value="dotpath">Dot-path & nested data</option>
+                    <option value="report">Mini report</option>
+                  </optgroup>
+                </select>
+              </label>
+
+              <button class="button button--small" id="resetBtn" type="button">Reset</button>
+            </div>
+
+            <div class="playground__grid">
+              <div class="panel">
+                <div class="panel__header">
+                  <h3>Template</h3>
+                  <p class="muted">Use <code>{{ ... }}</code>, <code>{% if %}</code>, <code>{% each %}</code>, and filters.</p>
+                </div>
+                <textarea id="tplInput" class="editor" spellcheck="false"></textarea>
+              </div>
+
+              <div class="panel">
+                <div class="panel__header">
+                  <h3>Data (JSON)</h3>
+                  <p class="muted">This JSON becomes the root scope.</p>
+                </div>
+                <textarea id="dataInput" class="editor" spellcheck="false"></textarea>
+              </div>
+
+              <div class="panel">
+                <div class="panel__header">
+                  <h3>Output</h3>
+                  <p class="muted">Rendered as text (escaped output stays visible).</p>
+                </div>
+                <pre class="output" id="outText" aria-live="polite"></pre>
+                <div class="panel__footer" id="statusLine" role="status" aria-live="polite"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="note">
+            <strong>Tip:</strong> Try adding HTML to your data and compare <code>{{ value }}</code> with <code>{{- value }}</code>.
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="features">
+        <div class="container">
+          <div class="section__header">
+            <h2>Features</h2>
+            <p class="muted">Focused, practical templating with predictable behavior.</p>
+          </div>
+
+          <div class="cards">
+            <div class="card">
+              <h3>Safe-by-default</h3>
+              <p>Interpolations are HTML-escaped by default. Raw output is explicit with <code>{{- ... }}</code>.</p>
+            </div>
+            <div class="card">
+              <h3>No arbitrary code execution</h3>
+              <p>Templates don’t run JavaScript. No <code>eval</code>, no function calls — just identifier/dot-path lookups.</p>
+            </div>
+            <div class="card">
+              <h3>Minimal control flow</h3>
+              <p>Use <code>{% if %}</code>/<code>{% else %}</code> and <code>{% each %}</code> loops for common cases.</p>
+            </div>
+            <div class="card">
+              <h3>Filters</h3>
+              <p>Pipe values through built-in and custom filters: <code>{{ name | trim | upper }}</code>.</p>
+            </div>
+            <div class="card">
+              <h3>Fail-safe parsing</h3>
+              <p>Malformed tokens degrade safely to literal text. Rendering should not explode at runtime.</p>
+            </div>
+            <div class="card">
+              <h3>ESM, CJS, Browser</h3>
+              <p>Use it in Node, bundlers, or directly in the browser via the IIFE build.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="security">
+        <div class="container">
+          <div class="section__header">
+            <h2>Security posture</h2>
+            <p class="muted">Designed to reduce risk in user-controlled template scenarios.</p>
+          </div>
+
+          <div class="callout">
+            <ul class="list">
+              <li><strong>No code execution:</strong> Templates are a restricted language, not JavaScript.</li>
+              <li><strong>Escaping by default:</strong> Helps prevent accidental HTML injection.</li>
+              <li><strong>Predictable resolution:</strong> Key lookups are restricted to object paths.</li>
+              <li><strong>Fail safe:</strong> Malformed tokens degrade instead of throwing.</li>
+            </ul>
+            <p class="muted">
+              For full syntax and guarantees, see the README in the repository.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- @partial:footer -->
+
+    <script type="module" src="./assets/index.js"></script>
+  </body>
+</html>

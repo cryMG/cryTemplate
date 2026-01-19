@@ -12,7 +12,9 @@ export default defineConfig(
   {
     ignores: [
       'dist/',
+      'dist-pages/',
       'coverage/',
+      'pages/',
     ],
   },
   {

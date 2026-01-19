@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- @partial:head -->
+  </head>
+  <body>
+    <!-- @partial:header -->
+
+    <main>
+      <section class="section" id="usage">
+        <div class="container">
+          <div class="section__header">
+            <h2>Usage</h2>
+            <p class="muted">ESM, CJS, or directly in the browser. All examples render plain strings.</p>
+          </div>
+
+          <div class="docExamples">
+            <div class="docExample">
+              <div class="docExample__head">
+                <div>
+                  <div class="docExample__title">ESM (Node.js / bundlers)</div>
+                  <div class="muted">Import and render a template.</div>
+                </div>
+              </div>
+              <pre class="codeblock"><code class="language-typescript">import { renderTemplate } from 'crytemplate';
+
+const out = renderTemplate('Hello {{ name | trim | upper }}!', { name: '  Alex  ' });
+// => "Hello ALEX!"</code></pre>
+            </div>
+
+            <div class="docExample">
+              <div class="docExample__head">
+                <div>
+                  <div class="docExample__title">CJS (Node.js require)</div>
+                  <div class="muted">Use CommonJS require().</div>
+                </div>
+              </div>
+              <pre class="codeblock"><code class="language-javascript">const { renderTemplate } = require('crytemplate');
+
+const out = renderTemplate('Hello {{ name }}!', { name: 'Alex' });
+// => "Hello Alex!"</code></pre>
+            </div>
+
+            <div class="docExample">
+              <div class="docExample__head">
+                <div>
+                  <div class="docExample__title">Browser (no bundler)</div>
+                  <div class="muted">
+                    Use the IIFE bundle and the global <code>cryTemplate</code> object. You can load it from a CDN provider like
+                    <a href="https://www.jsdelivr.com/" target="_blank" rel="noreferrer">jsDelivr</a> or
+                    <a href="https://unpkg.com/" target="_blank" rel="noreferrer">UNPKG</a>.
+                  </div>
+                </div>
+              </div>
+              <pre class="codeblock"><code class="language-html">&lt;!-- jsDelivr --&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/crytemplate/dist/browser/crytemplate.min.js"&gt;&lt;/script&gt;
+
+&lt;!-- UNPKG --&gt;
+&lt;script src="https://unpkg.com/crytemplate/dist/browser/crytemplate.min.js"&gt;&lt;/script&gt;
+
+&lt;script&gt;
+  const out = cryTemplate.renderTemplate('Hi {{ name }}!', { name: 'Alex' });
+  console.log(out);
+&lt;/script&gt;</code></pre>
+            </div>
+          </div>
+
+          <div class="note">
+            <strong>Security note:</strong> Templates do not execute JavaScript. You cannot call functions from templates.
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="section__header">
+            <h1 class="docTitle">Syntax & Docs</h1>
+            <p class="muted">
+              Quick reference for the cryTemplate language. For the canonical, complete documentation see the repository README.
+            </p>
+          </div>
+
+          <div class="docLayout" id="syntax">
+            <aside class="docToc" aria-label="Table of contents">
+              <div class="docToc__title">On this page</div>
+              <a class="docToc__link" href="#usage">Usage</a>
+              <a class="docToc__link" href="#interpolations">Interpolations</a>
+              <a class="docToc__link" href="#escaping">Escaping</a>
+              <a class="docToc__link" href="#dot-path">Dot-path resolution</a>
+              <a class="docToc__link" href="#fallbacks">Fallbacks</a>
+              <a class="docToc__link" href="#filters">Filters</a>
+              <a class="docToc__link" href="#conditionals">Conditionals</a>
+              <a class="docToc__link" href="#loops">Loops</a>
+              <a class="docToc__link" href="#robustness">Robustness</a>
+              <a class="docToc__link" href="#custom-filters">Custom filters</a>
+            </aside>
+
+            <article class="docProse">
+              <h2 id="interpolations">Interpolations</h2>
+              <p class="muted">Insert values using double curly braces. Missing keys render as an empty string.</p>
+              <pre class="codeblock"><code class="language-twig">{{ title }}
+{{ user.name.first }}
+
+// If a key cannot be resolved it becomes "" (empty)</code></pre>
+
+              <div class="note">
+                <strong>Important:</strong> Interpolations do not evaluate JavaScript. Only identifier/dot-path lookups, fallbacks (<code>||</code>, <code>??</code>) and filters are supported.
+              </div>
+
+              <h2 id="escaping">Escaping</h2>
+              <p class="muted">Escaped output is the default. Raw output is explicit.</p>
+              <pre class="codeblock"><code class="language-twig">{{ value }}   // escaped (default)
+{{= value }}  // escaped (explicit)
+{{- value }}  // raw (opt-in)</code></pre>
+
+              <h2 id="dot-path">Dot-path resolution</h2>
+              <p class="muted">Use dot-paths to traverse nested objects.</p>
+              <pre class="codeblock"><code class="language-twig">Hello {{ user.profile.firstName }}!</code></pre>
+
+              <h2 id="fallbacks">Fallbacks</h2>
+              <p class="muted">Choose between “empty-ish” vs “nullish” fallback behavior. Fallbacks are chainable left-to-right.</p>
+              <pre class="codeblock"><code class="language-twig">{{ user.name || user.email || 'anonymous' }}
+
+{{ v || 'fallback' }}   // replaces undefined, null, '', [], {}
+{{ v ?? 'fallback' }}   // replaces undefined, null only</code></pre>
+
+              <h2 id="filters">Filters</h2>
+              <p class="muted">Pipe values through filters, left-to-right. Unknown filters are ignored (fail-safe behavior).</p>
+              <pre class="codeblock"><code class="language-twig">{{ name | trim | upper }}
+{{ price | number(2, ',', '.') }}
+{{ createdAt | dateformat('YYYY-MM-DD') }}</code></pre>
+
+              <h3>Filter names</h3>
+              <p class="muted">In templates, filter names are parsed as <code>\w+</code>. When registering filters, names must match <code>^[a-z][\w]*$</code>.</p>
+
+              <h3>Filter arguments</h3>
+              <p class="muted">Arguments are optional and comma-separated.</p>
+              <pre class="codeblock"><code class="language-twig">{{ title | replace(' ', '-') | lower }}
+{{ price | number(2, ',', '.') }}</code></pre>
+
+              <p class="muted">Supported argument literals:</p>
+              <ul class="list">
+                <li>strings in single or double quotes (basic backslash escaping)</li>
+                <li>numbers (<code>123</code>, <code>-1</code>, <code>3.14</code>)</li>
+                <li>booleans (<code>true</code>/<code>false</code>, case-insensitive)</li>
+                <li><code>null</code> (case-insensitive)</li>
+              </ul>
+              <p class="muted">Unsupported argument tokens are ignored.</p>
+
+              <h3>Built-in filters</h3>
+              <p class="muted">cryTemplate ships with the following filters:</p>
+              <ul class="list">
+                <li><strong>upper</strong>, <strong>lower</strong>, <strong>trim</strong>, <strong>replace(from, to)</strong>, <strong>string</strong></li>
+                <li><strong>number(decimals?, decimalSep?, thousandsSep?)</strong></li>
+                <li><strong>json</strong>, <strong>urlencode</strong>, <strong>dateformat(format?)</strong></li>
+              </ul>
+
+              <h4><code>upper</code></h4>
+              <p class="muted">Uppercases the string representation. Returns <code>''</code> for <code>null</code>/<code>undefined</code>.</p>
+
+              <h4><code>lower</code></h4>
+              <p class="muted">Lowercases the string representation. Returns <code>''</code> for <code>null</code>/<code>undefined</code>.</p>
+
+              <h4><code>trim</code></h4>
+              <p class="muted">Trims surrounding whitespace from the string representation. Returns <code>''</code> for <code>null</code>/<code>undefined</code>.</p>
+
+              <h4><code>replace(from, to)</code></h4>
+              <p class="muted">Performs a literal, global replacement on the string representation. If <code>from</code> is <code>''</code>, the input is returned unchanged.</p>
+
+              <h4><code>string</code></h4>
+              <p class="muted">Forces an early string conversion: <code>null</code>/<code>undefined</code> → <code>''</code>, otherwise <code>String(value)</code>.</p>
+
+              <h4><code>number(decimals?, decimalSep?, thousandsSep?)</code></h4>
+              <p class="muted">Formats numbers. It tries <code>Number(value)</code> if the value is not already a number.</p>
+              <p class="muted">If the numeric result is not finite, it returns <code>''</code> for <code>null</code>/<code>undefined</code> and otherwise <code>String(value)</code>.</p>
+              <pre class="codeblock"><code class="language-twig">{{ price | number(2) }}        // 1234.50
+{{ price | number(2, ',') }}    // 1234,50
+{{ price | number(2, ',', '.') }} // 1.234,50</code></pre>
+
+              <h4><code>json</code></h4>
+              <p class="muted">Serializes via <code>JSON.stringify(value)</code>. If that returns <code>undefined</code>, the filter returns <code>''</code>.</p>
+
+              <h4><code>urlencode</code></h4>
+              <p class="muted">Encodes via <code>encodeURIComponent(String(value))</code>.</p>
+
+              <h4><code>dateformat(format?)</code></h4>
+              <p class="muted">Formats <code>Date</code>, timestamp numbers, or date-like strings. Invalid inputs return <code>''</code>. Default format: <code>YYYY-MM-DD HH:mm:ss</code>.</p>
+              <pre class="codeblock"><code class="language-twig">{{ createdAt | dateformat('YYYY-MM-DD HH:mm:ss') }}
+{{ createdAt | dateformat }}</code></pre>
+              <p class="muted">Supported Day.js-style tokens (subset without Day.js): <code>YYYY</code>, <code>YY</code>, <code>M</code>/<code>MM</code>, <code>D</code>/<code>DD</code>, <code>H</code>/<code>HH</code>, <code>h</code>/<code>hh</code>, <code>m</code>/<code>mm</code>, <code>s</code>/<code>ss</code>, <code>Z</code>, <code>A</code>/<code>a</code>.</p>
+              <p class="muted">Escaping: anything inside <code>[...]</code> is treated as a literal and brackets are removed.</p>
+              <pre class="codeblock"><code class="language-twig">{{ createdAt | dateformat('YYYY-MM-DD [YYYY-MM-DD]') }}</code></pre>
+
+              <h3>Day.js integration (optional)</h3>
+              <p class="muted">cryTemplate does not require Day.js, but you can plug it in for full formatting support.</p>
+              <pre class="codeblock"><code class="language-typescript">import dayjs from 'dayjs';
+import { setDayjsTemplateReference, renderTemplate } from 'crytemplate';
+
+setDayjsTemplateReference(dayjs);
+
+const out = renderTemplate("{{ d | dateformat('MMM YYYY') }}", { d: new Date() });</code></pre>
+
+              <h2 id="conditionals">Conditionals</h2>
+              <pre class="codeblock"><code class="language-twig">{% if user.admin %}
+  Admin
+{% elseif user.moderator %}
+  Moderator
+{% else %}
+  User
+{% endif %}</code></pre>
+
+              <h3>Truthiness</h3>
+              <ul class="list">
+                <li><strong>Arrays</strong> are truthy only when non-empty.</li>
+                <li><strong>Objects</strong> are truthy only when they have at least one own key.</li>
+                <li>Everything else uses normal boolean coercion.</li>
+              </ul>
+
+              <h3>Negation</h3>
+              <pre class="codeblock"><code class="language-twig">{% if !user.admin %}not admin{% endif %}
+{% if not user.admin %}not admin{% endif %}</code></pre>
+
+              <h3>Comparisons, logical ops, grouping</h3>
+              <pre class="codeblock"><code class="language-twig">{% if status == 'open' %}...{% endif %}
+{% if age >= 18 %}adult{% endif %}
+{% if (a == 'x' && b) || c %}ok{% endif %}</code></pre>
+
+              <p class="muted">Precedence is <code>&amp;&amp;</code> before <code>||</code>.</p>
+
+              <div class="note">
+                <strong>Important:</strong> Tests are not JavaScript expressions. There is no arbitrary code execution.
+              </div>
+
+              <h2 id="loops">Loops</h2>
+              <p class="muted">Iterate arrays (and objects) with <code>{% each ... %}</code>.</p>
+              <pre class="codeblock"><code class="language-twig">{% each items as it %}
+  - {{ it }}
+{% endeach %}</code></pre>
+
+              <h3>Forms</h3>
+              <ul class="list">
+                <li><strong>Arrays:</strong> <code>{% each listExpr as item %}</code> ... <code>{% endeach %}</code></li>
+                <li><strong>Arrays with index:</strong> <code>{% each listExpr as item, i %}</code> ... <code>{% endeach %}</code></li>
+                <li><strong>Objects:</strong> iterates own keys and exposes <code>{ key, value }</code> as the loop variable</li>
+              </ul>
+
+              <pre class="codeblock"><code class="language-twig">{% each items as it, i %}
+  {{ i }}: {{ it }}
+{% endeach %}</code></pre>
+
+              <pre class="codeblock"><code class="language-twig">{% each user as e %}
+  {{ e.key }} = {{ e.value }}
+{% endeach %}</code></pre>
+
+              <h3>Scoping</h3>
+              <pre class="codeblock"><code class="language-twig">outside={{ it }}
+{% each items as it %}
+  inside={{ it }}
+{% endeach %}
+outside-again={{ it }}</code></pre>
+
+              <h2 id="robustness">Robustness</h2>
+              <p class="muted">
+                Malformed or misplaced control tokens degrade to literal text instead of throwing at runtime.
+              </p>
+
+              <h2 id="custom-filters">Custom filters</h2>
+              <p class="muted">You can register custom filters at runtime. Unknown filters in templates are ignored; registered filters are applied left-to-right.</p>
+
+              <div class="note">
+                <strong>Caution:</strong> Custom filters run your code. If you generate raw HTML or introduce unsafe behavior, you can reintroduce injection risks.
+              </div>
+
+              <h3>Registering a filter (Node/ESM)</h3>
+              <pre class="codeblock"><code class="language-typescript">import { registerTemplateFilter, renderTemplate } from 'crytemplate';
+
+registerTemplateFilter('slug', (value) =&gt; {
+  const s = (value === undefined || value === null) ? '' : String(value);
+  return s.trim().toLowerCase().replace(/\s+/g, '-');
+});
+
+const out = renderTemplate('Hello {{ name | slug }}!', { name: 'John Doe' });</code></pre>
+
+              <h3>Registering a filter (browser)</h3>
+              <pre class="codeblock"><code class="language-html">&lt;script src="https://cdn.jsdelivr.net/npm/crytemplate/dist/browser/crytemplate.min.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  cryTemplate.registerTemplateFilter('slug', (value) =&gt; {
+    const s = (value === undefined || value === null) ? '' : String(value);
+    return s.trim().toLowerCase().replace(/\s+/g, '-');
+  });
+
+  const out = cryTemplate.renderTemplate('Hello {{ name | slug }}!', { name: 'John Doe' });
+&lt;/script&gt;</code></pre>
+
+              <h3>Notes</h3>
+              <ul class="list">
+                <li>The handler signature is <code>(value: unknown, args?: (string | number | boolean | null)[]) =&gt; unknown</code>.</li>
+                <li>Returning non-strings is allowed; the engine stringifies after the filter pipeline.</li>
+                <li>Register filters once during application startup (the registry is global to the module).</li>
+                <li>Re-registering the same name overrides the previous handler (including built-ins).</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="examples">
+        <div class="container">
+          <div class="section__header">
+            <h2>Try-it examples</h2>
+            <p class="muted">Click “Run” to render. Output is shown as text.</p>
+          </div>
+
+          <div class="docExamples">
+            <div class="docExample" data-example>
+              <div class="docExample__head">
+                <div>
+                  <div class="docExample__title">Escaping vs raw</div>
+                  <div class="muted">Shows why raw output is opt-in.</div>
+                </div>
+                <button class="button button--small" type="button" data-run>Run</button>
+              </div>
+              <pre class="codeblock" data-tpl><code class="language-twig">Escaped: {{ html }}
+Raw: {{- html }}</code></pre>
+              <pre class="codeblock" data-data><code class="language-json">{
+  "html": "&lt;strong&gt;Trusted?&lt;/strong&gt; &amp; &lt;script&gt;alert(1)&lt;/script&gt;"
+}</code></pre>
+              <div class="docExample__out">
+                <div class="muted">Output</div>
+                <pre class="output" data-out></pre>
+              </div>
+            </div>
+
+            <div class="docExample" data-example>
+              <div class="docExample__head">
+                <div>
+                  <div class="docExample__title">Filters</div>
+                  <div class="muted">Trim + upper + dateformat.</div>
+                </div>
+                <button class="button button--small" type="button" data-run>Run</button>
+              </div>
+              <pre class="codeblock" data-tpl><code class="language-twig">Hello {{ name | trim | upper }}!
+Today: {{ createdAt | dateformat('YYYY-MM-DD') }}</code></pre>
+              <pre class="codeblock" data-data><code class="language-json">{
+  "name": "  Alex  ",
+  "createdAt": "2026-01-19T12:00:00Z"
+}</code></pre>
+              <div class="docExample__out">
+                <div class="muted">Output</div>
+                <pre class="output" data-out></pre>
+              </div>
+            </div>
+
+            <div class="docExample" data-example>
+              <div class="docExample__head">
+                <div>
+                  <div class="docExample__title">Fallbacks: || vs ??</div>
+                  <div class="muted">See the semantic difference in one render.</div>
+                </div>
+                <button class="button button--small" type="button" data-run>Run</button>
+              </div>
+              <pre class="codeblock" data-tpl><code class="language-twig">nameOr: {{ name || 'fallback' }}
+nameNullish: {{ name ?? 'fallback' }}</code></pre>
+              <pre class="codeblock" data-data><code class="language-json">{
+  "name": ""
+}</code></pre>
+              <div class="docExample__out">
+                <div class="muted">Output</div>
+                <pre class="output" data-out></pre>
+              </div>
+            </div>
+
+            <div class="docExample" data-example>
+              <div class="docExample__head">
+                <div>
+                  <div class="docExample__title">number() formatting</div>
+                  <div class="muted">Decimals + separators.</div>
+                </div>
+                <button class="button button--small" type="button" data-run>Run</button>
+              </div>
+              <pre class="codeblock" data-tpl><code class="language-twig">US: {{ price | number(2, '.', ',') }}
+DE: {{ price | number(2, ',', '.') }}</code></pre>
+              <pre class="codeblock" data-data class="language-json"><code>{
+  "price": 1234.5
+}</code></pre>
+              <div class="docExample__out">
+                <div class="muted">Output</div>
+                <pre class="output" data-out></pre>
+              </div>
+            </div>
+
+            <div class="docExample" data-example>
+              <div class="docExample__head">
+                <div>
+                  <div class="docExample__title">json + urlencode</div>
+                  <div class="muted">Serialize an object and encode it for a URL.</div>
+                </div>
+                <button class="button button--small" type="button" data-run>Run</button>
+              </div>
+              <pre class="codeblock" data-tpl><code class="language-twig">json: {{ obj | json }}
+url: /search?q={{ obj | json | urlencode }}</code></pre>
+              <pre class="codeblock" data-data><code class="language-json">{
+  "obj": {
+    "q": "ice cream",
+    "page": 1
+  }
+}</code></pre>
+              <div class="docExample__out">
+                <div class="muted">Output</div>
+                <pre class="output" data-out></pre>
+              </div>
+            </div>
+
+            <div class="docExample" data-example>
+              <div class="docExample__head">
+                <div>
+                  <div class="docExample__title">Conditionals + loops</div>
+                  <div class="muted">A practical snippet combining both.</div>
+                </div>
+                <button class="button button--small" type="button" data-run>Run</button>
+              </div>
+              <pre class="codeblock" data-tpl><code class="language-twig">{% if items %}
+Items:
+{% each items as it, i %}
+  {{ i }}: {{ it | trim | replace(' ', '-') | lower }}
+{% endeach %}
+{% else %}
+No items.
+{% endif %}</code></pre>
+              <pre class="codeblock" data-data class="language-json"><code>{
+  "items": [
+    "  Coffee Beans  ",
+    "Tea",
+    "Brown Sugar"
+  ]
+}</code></pre>
+              <div class="docExample__out">
+                <div class="muted">Output</div>
+                <pre class="output" data-out></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="note">
+            <strong>Want a full editor?</strong> Use the <a href="../#playground">Playground</a>.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- @partial:footer -->
+
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/languages/twig.min.js"></script>
+    <script src="../assets/crytemplate.min.js"></script>
+    <script type="module" src="../assets/docs.js"></script>
+  </body>
+</html>

@@ -8,6 +8,8 @@ No code execution from templates – just string magic with interpolation, contr
 
 ![Test and Release](https://github.com/cryMG/cryTemplate/workflows/Build%20and%20code%20checks/badge.svg)
 
+Infomation and live demo (GitHub Pages): <https://crymg.github.io/cryTemplate/>
+
 ## Why another template parser?
 
 Many existing template engines either allow arbitrary code execution (e.g., via `eval` or `new Function`), have heavy dependencies, or come with complex syntax and features that are overkill for simple templating needs.
