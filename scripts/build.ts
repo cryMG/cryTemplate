@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execSync, spawn } from 'node:child_process';
 import { build, BuildOptions } from 'esbuild';
+import { glob } from 'glob';
 
 import pkg from '../package.json' with { type: 'json' };
 
@@ -61,9 +62,6 @@ async function runCommand (command: string, args: string[], cwd: string): Promis
  * Common build options.
  */
 const buildOptions: BuildOptions = {
-  entryPoints: [
-    './src/index.ts',
-  ],
   outbase: './src',
   platform: 'neutral',
   external: [],
@@ -71,7 +69,6 @@ const buildOptions: BuildOptions = {
   target: 'node22',
   treeShaking: true,
   metafile: true,
-  bundle: true,
 };
 
 /**
@@ -86,10 +83,13 @@ async function doBuild (): Promise<boolean> {
   /** return success state */
   let success = true;
 
+  const entryPoints = await glob('./src/**/*.ts');
+
   const [ esmResult, cjsResult, browserResult, browserMinResult ] = await Promise.all([
     // ESM build
     build({
       ...buildOptions,
+      entryPoints,
       outdir: './dist/esm',
       format: 'esm',
     }),
@@ -97,17 +97,20 @@ async function doBuild (): Promise<boolean> {
     // CJS build
     build({
       ...buildOptions,
+      entryPoints,
       outdir: './dist/cjs',
       format: 'cjs',
-      outExtension: {
-        '.js': '.cjs',
-      },
     }),
 
     // Browser build
     build({
       ...buildOptions,
+      entryPoints: [
+        './src/index.ts',
+      ],
       outfile: './dist/browser/crytemplate.js',
+      bundle: true,
+      treeShaking: true,
       format: 'iife',
       platform: 'browser',
       globalName: 'cryTemplate',
@@ -117,8 +120,13 @@ async function doBuild (): Promise<boolean> {
     // Browser build (minified)
     build({
       ...buildOptions,
+      entryPoints: [
+        './src/index.ts',
+      ],
       outfile: './dist/browser/crytemplate.min.js',
+      bundle: true,
       minify: true,
+      treeShaking: true,
       format: 'iife',
       platform: 'browser',
       globalName: 'cryTemplate',
@@ -139,6 +147,12 @@ async function doBuild (): Promise<boolean> {
     fs.promises.writeFile(path.join(baseDir, 'dist', 'metaBrowser.json'), JSON.stringify(browserResult.metafile, undefined, 2)),
     fs.promises.writeFile(path.join(baseDir, 'dist', 'metaBrowserMin.json'), JSON.stringify(browserMinResult.metafile, undefined, 2)),
   ]);
+
+  // Ensure Node treats dist/cjs/*.js as CommonJS even though the package root is type=module.
+  await fs.promises.writeFile(
+    path.join(baseDir, 'dist', 'cjs', 'package.json'),
+    JSON.stringify({ type: 'commonjs' }, undefined, 2) + '\n',
+  );
 
   const duration = Date.now() - startTime;
   process.stdout.write(`Build done in ${(duration / 1000).toFixed(2)}s\n`);

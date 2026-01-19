@@ -28,7 +28,7 @@
   "bugs": "https://github.com/cryMG/cryTemplate/issues",
   "homepage": "https://github.com/cryMG/cryTemplate",
   "type": "module",
-  "main": "./dist/cjs/index.cjs",
+  "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "browser": "./dist/browser/crytemplate.min.js",
   "types": "./dist/types/index.d.ts",
@@ -36,7 +36,7 @@
     ".": {
       "types": "./dist/types/index.d.ts",
       "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.cjs"
+      "require": "./dist/cjs/index.js"
     },
     "./package.json": "./package.json"
   },
@@ -87,7 +87,8 @@
     "exclude": [
       "test/**",
       "dist/**",
-      "scripts/**"
+      "scripts/**",
+      "src/types.ts"
     ]
   },
   "files": [
