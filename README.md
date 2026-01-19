@@ -4,6 +4,10 @@
 
 No code execution from templates – just string magic with interpolation, control flow, iteration, filters, and HTML escaping. 🪄
 
+[![NPM](https://nodei.co/npm/crytemplate.svg?data=d,s)](https://nodei.co/npm/crytemplate/)
+
+![Test and Release](https://github.com/cryMG/cryTemplate/workflows/Build%20and%20code%20checks/badge.svg)
+
 ## Why another template parser?
 
 Many existing template engines either allow arbitrary code execution (e.g., via `eval` or `new Function`), have heavy dependencies, or come with complex syntax and features that are overkill for simple templating needs.
@@ -44,10 +48,19 @@ const out = renderTemplate('Hello {{ name }}!', { name: 'Alex' });
 
 ### Browser (no bundler)
 
-The browser bundles can be directly included via script tags:
+The browser bundles can be directly included via script tags.
+
+From the `dist/browser` folder, use either:
 
 * `dist/browser/crytemplate.js`
 * `dist/browser/crytemplate.min.js`
+
+Or use a CDN like jsDelivr or UNPKG:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/crytemplate/dist/browser/crytemplate.min.js"></script>
+<script src="https://unpkg.com/crytemplate/dist/browser/crytemplate.min.js"></script>
+```
 
 They expose a global `cryTemplate` object.
 
@@ -56,7 +69,7 @@ They expose a global `cryTemplate` object.
 <html>
   <head>
     <meta charset="utf-8" />
-    <script src="./crytemplate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/crytemplate/dist/browser/crytemplate.min.js"></script>
   </head>
   <body>
     <script>
