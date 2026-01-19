@@ -7,7 +7,7 @@ import {
 } from '../src/index.js';
 import { refs } from '../src/refs.js';
 
-describe('filters', function () {
+describe('template rendering / filters', function () {
   let prevDayjsRef: typeof refs.dayjs;
 
   beforeEach(function () {
