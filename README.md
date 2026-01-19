@@ -1,36 +1,28 @@
 # cryTemplate
 
-Lightweight and safe-by-default string template engine with zero dependencies.
+**Lightweight** and **safe-by-default** string template engine with **zero dependencies**.
 
-## Highlights and guarantees
+No code execution from templates – just string magic with interpolation, control flow, iteration, filters, and HTML escaping. 🪄
 
-* Escapes HTML by default for interpolations (`{{ key }}` and `{{= key }}`)
-* Opt-in raw insertion via `{{- key }}` for already-sanitized/fully trusted HTML
-* Fallback operators inside interpolations:
-  * `||` (empty-ish): replaces undefined, null, empty string, empty array or empty object
-  * `??` (nullish): replaces only when value is undefined or null
-  * Both operators are chainable from left to right, e.g. `{{ a || b ?? 'x' || 'y' }}`
-* Minimal control flow: `{% if %}` / `{% elseif %}` / `{% else %}` / `{% endif %}`
-  * Conditions support negation via `!` or leading `not` and comparisons: `==`, `!=`, `>`, `<`, `>=`, `<=`
-  * Logical operators with grouping: `&&`, `||` and parentheses, e.g. `{% if (a == 'x' && b) || c %}`
-  * RHS of comparisons can be a literal (string, number, boolean, null) or a key (identifier/dot-path)
-* Iteration:
-  * Arrays: `{% each listExpr as item %}`...`{% endeach %}`, optional index var: `{% each list as item, i %}`
-  * Objects: if listExpr resolves to an object, iterate its own keys and expose `{ key, value }` as the loop var
-* Inline comments: `{%# this is ignored %}`
-* Filter pipeline for interpolations, e.g. `{{ user.name | trim | upper }}`
-  * Built-in filters: upper, lower, trim, number, json, urlencode, replace, string, dateformat
-  * number filter signatures:
-    * number(decimals)
-    * number(decimals, decimalSep)
-    * number(decimals, decimalSep, thousandsSep)
-* Dot-path resolution (e.g., user.name.first) across scope stack (later scopes shadow earlier)
-* Misplaced/invalid control tokens degrade to literal text; no runtime throws for templates
-* No arbitrary JS evaluation in templates (predictable and secure by design)
+## Why another template parser?
+
+Many existing template engines either allow arbitrary code execution (e.g., via `eval` or `new Function`), have heavy dependencies, or come with complex syntax and features that are overkill for simple templating needs.
+
+*cryTemplate* is our answer to a minimal, secure, and easy-to-use template engine that covers common use cases without the risks and bloat of more complex solutions.
+
+## Highlights
+
+* HTML-escapes interpolations (`{{ ... }}` / `{{= ... }}`)
+* Raw HTML is opt-in only (`{{- ... }}`)
+* No arbitrary JavaScript execution from templates (secure and predictable)
+* Basics included: interpolations, `{% if %}` conditionals, `{% each %}` loops, comments
+* Filters with a pipe syntax (`{{ value | trim | upper }}`), including `dateformat`
+* Dot-path lookups across a scope stack + simple fallbacks (`||`, `??`)
+* Fail-safe parsing: malformed/unsupported tokens degrade to literal text (no runtime throws)
 
 ## Usage
 
-cryTemplate can be consumed as ESM, CJS, or directly in the browser.
+*cryTemplate* can be consumed as ESM, CJS, or directly in the browser.
 
 ### ESM (Node.js / modern bundlers)
 
@@ -74,6 +66,247 @@ They expose a global `cryTemplate` object.
     </script>
   </body>
 </html>
+```
+
+## Interpolations
+
+Interpolations insert data into the output using double curly braces.
+
+Supported forms:
+
+* `{{ key }}`: HTML-escaped insertion (default)
+* `{{= key }}`: HTML-escaped insertion (explicit)
+* `{{- key }}`: raw insertion (no HTML escaping)
+
+Where `key` is an identifier or dot-path identifier:
+
+* `name`
+* `user.name`
+* `user.profile.firstName`
+
+If a key cannot be resolved, it becomes an empty string.
+
+> [!IMPORTANT]
+> Interpolations do not evaluate JavaScript. You cannot call functions from templates.
+> Only identifier/dot-path lookups, fallbacks (`||`, `??`) and filters are supported.
+
+### Escaping behavior
+
+By default, interpolation output is HTML-escaped (safe-by-default):
+
+```txt
+{{ title }}
+{{= title }}
+```
+
+Raw insertion bypasses escaping:
+
+```txt
+{{- trustedHtml }}
+```
+
+Only use raw insertion for already-sanitized, fully trusted HTML.
+
+### Dot-path resolution
+
+Dot-paths resolve through objects:
+
+```txt
+Hello {{ user.name.first }}!
+```
+
+If any segment is missing, the result is empty.
+
+### Fallback operators (`||` and `??`)
+
+Interpolations support fallbacks:
+
+* `||` (empty-ish): replaces `undefined`, `null`, `''`, `[]`, `{}`
+* `??` (nullish): replaces only `undefined` and `null`
+
+Fallbacks are chainable left-to-right:
+
+```txt
+Hello {{ user.name || user.email || 'anonymous' }}
+```
+
+Examples showing the semantic difference:
+
+```txt
+{{ v || 'fallback' }}   // replaces '' but keeps 0 and false
+{{ v ?? 'fallback' }}   // replaces null/undefined but keeps ''
+```
+
+### Filters in interpolations
+
+You can pipe the resolved value through one or more filters:
+
+```txt
+{{ user.name | trim | upper }}
+{{ price | number(2, ',', '.') }}
+{{ createdAt | dateformat('YYYY-MM-DD') }}
+```
+
+Filters are applied left-to-right, and unknown filters are ignored.
+
+See below for details on built-in and custom filters.
+
+## Conditionals
+
+Conditionals provide minimal control flow using `{% ... %}` blocks.
+
+Supported tags:
+
+* `{% if test %}`
+* `{% elseif test %}`
+* `{% else %}`
+* `{% endif %}`
+
+Example:
+
+```txt
+{% if user.admin %}
+  Admin
+{% elseif user.moderator %}
+  Moderator
+{% else %}
+  User
+{% endif %}
+```
+
+> [!IMPORTANT]
+> Tests are not JavaScript expressions. There is no arbitrary code execution.
+> If a test is malformed/unsupported, the engine degrades safely.
+
+### Truthiness rules
+
+Truthiness is intentionally simple and predictable:
+
+* Arrays are truthy only when non-empty (`[1]` → true, `[]` → false)
+* Objects are truthy only when they have at least one own key (`{k:1}` → true, `{}` → false)
+* Everything else uses normal boolean coercion (`0` → false, `'x'` → true)
+
+Examples:
+
+```txt
+{% if items %}has items{% else %}no items{% endif %}
+{% if obj %}has keys{% else %}empty{% endif %}
+```
+
+### Negation
+
+Negation works with either `!` or leading `not`:
+
+```txt
+{% if !user.admin %}not admin{% endif %}
+{% if not user.admin %}not admin{% endif %}
+```
+
+### Comparisons
+
+Supported comparison operators:
+
+* `==`, `!=` (equality)
+* `>`, `<`, `>=`, `<=` (numeric/string comparisons)
+
+The left-hand side is usually a key, the right-hand side can be:
+
+* a literal: `'text'`, `123`, `3.14`, `true`, `false`, `null`
+* another key
+
+Examples:
+
+```txt
+{% if status == 'open' %}...{% endif %}
+{% if age >= 18 %}adult{% endif %}
+{% if lhs > rhs %}...{% endif %}
+{% if v == null %}missing{% endif %}
+```
+
+### Logical operators and grouping
+
+You can combine tests using `&&` and `||` and group with parentheses:
+
+```txt
+{% if (a == 'x' && b) || c %}
+  ok
+{% endif %}
+```
+
+Precedence is `&&` before `||`.
+
+### Malformed control tokens
+
+Misplaced or invalid control tokens degrade to literal text instead of throwing at runtime.
+This keeps rendering fail-safe even on partially broken templates.
+
+## Loops
+
+Loops are implemented with an `{% each ... %}` block.
+
+Supported forms:
+
+* Arrays: `{% each listExpr as item %}` ... `{% endeach %}`
+* Arrays with index: `{% each listExpr as item, i %}` ... `{% endeach %}`
+* Objects: if `listExpr` resolves to an object, the engine iterates own keys and exposes an entry object as the loop variable.
+
+### Iterating arrays
+
+```txt
+{% each items as it %}
+  - {{ it }}
+{% endeach %}
+```
+
+With an index variable:
+
+```txt
+{% each items as it, i %}
+  {{ i }}: {{ it }}
+{% endeach %}
+```
+
+If the array is empty, the loop renders nothing.
+
+### Iterating objects
+
+If the list expression is an object, the loop variable is an entry object with `key` and `value`:
+
+```txt
+{% each user as e %}
+  {{ e.key }} = {{ e.value }}
+{% endeach %}
+```
+
+Object iteration uses the engine's normal key enumeration order (insertion order in modern JS engines).
+
+### Scoping rules
+
+Each loop introduces a nested scope:
+
+* The loop variable (and optional index variable) exist only inside the loop body.
+* Outer variables with the same name are shadowed inside the loop, but remain unchanged outside.
+
+Example:
+
+```txt
+outside={{ it }}
+{% each items as it %}
+  inside={{ it }}
+{% endeach %}
+outside-again={{ it }}
+```
+
+### Nesting
+
+Loops can be nested and combined with conditionals:
+
+```txt
+{% each users as u %}
+  {% if u.active %}
+    {{ u.name }}
+  {% endif %}
+{% endeach %}
 ```
 
 ## Filters
@@ -254,6 +487,9 @@ const out = renderTemplate("{{ d | dateformat('MMM YYYY') }}", { d: new Date() }
 ### Custom filters
 
 You can create and register your own filters at runtime.
+
+> [!CAUTION]
+> By implementing custom filters, you take responsibility for ensuring that they do not introduce security vulnerabilities (e.g., via code execution or unsafe HTML generation).
 
 #### Registering a filter
 
