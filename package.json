@@ -1,7 +1,7 @@
 {
   "name": "crytemplate",
   "version": "0.0.1",
-  "description": "Lightweight template engine",
+  "description": "Lightweight and safe-by-default string template engine with zero dependencies",
   "keywords": [
     "template",
     "templating",
