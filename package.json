@@ -3,7 +3,10 @@
   "version": "0.0.1",
   "description": "Lightweight template engine",
   "keywords": [
-    "template"
+    "template",
+    "templating",
+    "engine",
+    "crytpl"
   ],
   "license": "MIT",
   "author": {
@@ -22,8 +25,12 @@
     "type": "git",
     "url": "https://github.com/cryMG/cryTemplate"
   },
+  "bugs": "https://github.com/cryMG/cryTemplate/issues",
+  "homepage": "https://github.com/cryMG/cryTemplate",
   "type": "module",
   "main": "./dist/cjs/index.cjs",
+  "module": "./dist/esm/index.js",
+  "browser": "./dist/browser/crytemplate.min.js",
   "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
@@ -33,6 +40,8 @@
     },
     "./package.json": "./package.json"
   },
+  "jsdelivr": "./dist/browser/crytemplate.min.js",
+  "unpkg": "./dist/browser/crytemplate.min.js",
   "scripts": {
     "prebuild": "rimraf dist/*",
     "build": "tsx scripts/build.ts",
@@ -80,5 +89,13 @@
       "dist/**",
       "scripts/**"
     ]
-  }
+  },
+  "files": [
+    "README.md",
+    "LICENSE",
+    "dist/browser",
+    "dist/cjs",
+    "dist/esm",
+    "dist/types"
+  ]
 }
