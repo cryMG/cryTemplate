@@ -317,7 +317,12 @@ h2 { margin: 0 0 6px; font-size: 1.7rem; }
   border-bottom: 1px solid var(--border);
 }
 
-.select { display: grid; gap: 6px; }
+.select {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: auto auto;
+  align-items: center;
+}
 .select__label { font-size: 0.9rem; color: var(--muted); }
 select {
   appearance: none;
