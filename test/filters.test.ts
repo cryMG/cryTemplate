@@ -1,11 +1,23 @@
 import { assert } from 'chai';
+import dayjs from 'dayjs';
 
 import {
   registerTemplateFilter,
   renderTemplate,
 } from '../src/index.js';
+import { refs } from '../src/refs.js';
 
 describe('filters', function () {
+  let prevDayjsRef: typeof refs.dayjs;
+
+  beforeEach(function () {
+    prevDayjsRef = refs.dayjs;
+  });
+
+  afterEach(function () {
+    refs.dayjs = prevDayjsRef;
+  });
+
   it('upper and lower', function () {
     assert.strictEqual(renderTemplate('{{ name | upper }}', { name: 'Ada' }), 'ADA');
     assert.strictEqual(renderTemplate('{{ name | lower }}', { name: 'BETA' }), 'beta');
@@ -73,6 +85,115 @@ describe('filters', function () {
 
   it('unknown filters are ignored (fail-safe)', function () {
     assert.strictEqual(renderTemplate('{{ name | doesNotExist }}', { name: 'Ada' }), 'Ada');
+  });
+
+  it('dateformat supports a small dayjs-like token set', function () {
+    const d = new Date(2026, 0, 19, 15, 4, 5);
+    const asString = d.toISOString();
+    const asNumber = d.getTime();
+
+    const pad2 = (n: number): string => String(n).padStart(2, '0');
+    const tzOffsetMinutes = -d.getTimezoneOffset();
+    const tzSign = tzOffsetMinutes >= 0 ? '+' : '-';
+    const tzAbs = Math.abs(tzOffsetMinutes);
+    const tzHours = Math.floor(tzAbs / 60);
+    const tzMinutes = tzAbs % 60;
+    const tz = `${tzSign}${pad2(tzHours)}:${pad2(tzMinutes)}`;
+
+    assert.strictEqual(
+      renderTemplate("{{ v | dateformat('YYYY-MM-DD HH:mm:ss') }}", { v: d }),
+      '2026-01-19 15:04:05',
+    );
+    assert.strictEqual(
+      renderTemplate("{{ v | dateformat('YYYY-MM-DD HH:mm:ss') }}", { v: asString }),
+      '2026-01-19 15:04:05',
+    );
+    assert.strictEqual(
+      renderTemplate("{{ v | dateformat('YYYY-MM-DD HH:mm:ss') }}", { v: asNumber }),
+      '2026-01-19 15:04:05',
+    );
+    assert.strictEqual(
+      renderTemplate("{{ v | dateformat('YY-M-D H:m:s') }}", { v: d }),
+      '26-1-19 15:4:5',
+    );
+    assert.strictEqual(
+      renderTemplate("{{ v | dateformat('h:hh A a') }}", { v: d }),
+      '3:03 PM pm',
+    );
+    assert.strictEqual(
+      renderTemplate("{{ v | dateformat('Z') }}", { v: d }),
+      tz,
+    );
+
+    // default format
+    assert.strictEqual(
+      renderTemplate('{{ v | dateformat }}', { v: d }),
+      '2026-01-19 15:04:05',
+    );
+
+    // Dayjs-like escaping: keep content inside brackets as literal
+    assert.strictEqual(
+      renderTemplate("{{ v | dateformat('YYYY[Y]MM[M]DD[D]') }}", { v: d }),
+      '2026Y01M19D',
+    );
+  });
+
+  it('dateformat uses own fallback when dayjs is not available', function () {
+    refs.dayjs = null;
+
+    const d = new Date(2026, 0, 19, 15, 4, 5);
+
+    assert.strictEqual(
+      renderTemplate("{{ v | dateformat('YYYY-MM-DD HH:mm:ss MMM') }}", { v: d }),
+      '2026-01-19 15:04:05 011', // MMM is MM and M concatenated in fallback
+    );
+  });
+
+  it('dateformat uses dayjs when available (and supports tokens beyond the fallback subset)', function () {
+    refs.dayjs = dayjs;
+
+    const d = new Date(2026, 0, 19, 15, 4, 5);
+
+    // `MMM` is supported by dayjs, but the fallback subset intentionally does not.
+    // This asserts we actually routed through dayjs.
+    assert.strictEqual(
+      renderTemplate("{{ v | dateformat('MMM') }}", { v: d }),
+      'Jan',
+    );
+  });
+
+  it('dateformat fallback matches dayjs for the supported token subset (Date, string, number)', function () {
+    const d = new Date(2026, 0, 19, 15, 4, 5);
+    const asString = d.toISOString();
+    const asNumber = d.getTime();
+
+    const fmt = 'YYYY-MM-DD HH:mm:ss Z A a [lit]';
+    const tpl = "{{ v | dateformat('" + fmt + "') }}";
+
+    refs.dayjs = null;
+    const fallbackDate = renderTemplate(tpl, { v: d });
+    const fallbackString = renderTemplate(tpl, { v: asString });
+    const fallbackNumber = renderTemplate(tpl, { v: asNumber });
+
+    refs.dayjs = dayjs;
+    const dayjsDate = renderTemplate(tpl, { v: d });
+    const dayjsString = renderTemplate(tpl, { v: asString });
+    const dayjsNumber = renderTemplate(tpl, { v: asNumber });
+
+    assert.strictEqual(fallbackDate, dayjsDate);
+    assert.strictEqual(fallbackString, dayjsString);
+    assert.strictEqual(fallbackNumber, dayjsNumber);
+  });
+
+  it('dateformat returns empty string for invalid input even when dayjs is available', function () {
+    refs.dayjs = dayjs;
+    assert.strictEqual(renderTemplate("{{ v | dateformat('YYYY') }}", { v: 'not-a-date' }), '');
+  });
+
+  it('dateformat returns empty string for invalid or empty input', function () {
+    assert.strictEqual(renderTemplate("{{ v | dateformat('YYYY') }}", { v: null }), '');
+    assert.strictEqual(renderTemplate("{{ v | dateformat('YYYY') }}", { v: undefined }), '');
+    assert.strictEqual(renderTemplate("{{ v | dateformat('YYYY') }}", { v: 'not-a-date' }), '');
   });
 
   it('supports dynamically registered custom filters', function () {

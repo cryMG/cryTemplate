@@ -18,6 +18,10 @@ export {
   registerTemplateFilter,
 } from './template-filters.js';
 
+export {
+  setDayjsTemplateReference,
+} from './refs.js';
+
 /**
  * Render a template using the provided data as the root scope.
  *

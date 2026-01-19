@@ -3,6 +3,7 @@ import type {
   TplFilter,
 } from './types.js';
 
+import { filterDateformat } from './filters/dateformat.js';
 import { filterJson } from './filters/json.js';
 import { filterLower } from './filters/lower.js';
 import { filterNumber } from './filters/number.js';
@@ -70,6 +71,7 @@ export const applyTemplateFilters = (value: unknown, filters: TplFilter[] | unde
 /*
  * Register built-in filters.
  */
+registerTemplateFilter('dateformat', filterDateformat);
 registerTemplateFilter('json', filterJson);
 registerTemplateFilter('lower', filterLower);
 registerTemplateFilter('number', filterNumber);

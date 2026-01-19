@@ -19,7 +19,7 @@ Lightweight and safe-by-default string template engine with zero dependencies.
   * Objects: if listExpr resolves to an object, iterate its own keys and expose `{ key, value }` as the loop var
 * Inline comments: `{%# this is ignored %}`
 * Filter pipeline for interpolations, e.g. `{{ user.name | trim | upper }}`
-  * Built-in filters: upper, lower, trim, number, json, urlencode, replace, string
+  * Built-in filters: upper, lower, trim, number, json, urlencode, replace, string, dateformat
   * number filter signatures:
     * number(decimals)
     * number(decimals, decimalSep)
@@ -189,6 +189,67 @@ Example: `{{ obj | json }}`
 Encodes the string representation of the value via `encodeURIComponent(...)`.
 
 Example: `{{ query | urlencode }}`
+
+#### `dateformat(format?)`
+
+Formats a date/time value.
+
+Inputs:
+
+* `Date`
+* `number` (timestamp, milliseconds since epoch)
+* `string` (anything `new Date(value)` can parse)
+
+If the input cannot be parsed as a valid date, the filter returns `''`.
+
+By default, it formats using:
+
+* `YYYY-MM-DD HH:mm:ss`
+
+Example:
+
+```txt
+{{ createdAt | dateformat('YYYY-MM-DD HH:mm:ss') }}
+{{ createdAt | dateformat }}
+```
+
+Supported formatting tokens in [Day.js](https://day.js.org/docs/en/display/format)-style:
+
+* `YYYY`, `YY`
+* `M`, `MM`
+* `D`, `DD`
+* `H`, `HH`
+* `h`, `hh`
+* `m`, `mm`
+* `s`, `ss`
+* `Z` (timezone offset in `±HH:mm`)
+* `A`, `a` (AM/PM)
+
+Escaping: anything inside `[...]` is treated as a literal and the brackets are removed.
+
+Example:
+
+```txt
+{{ createdAt | dateformat('YYYY-MM-DD [YYYY-MM-DD]') }}
+```
+
+##### Dayjs integration
+
+cryTemplate does not require [Day.js](https://day.js.org/), but you can enable full Day.js formatting by providing a Day.js reference.
+
+`setDayjsTemplateReference(dayjs)` sets the reference that the `dateformat` filter will use.
+Passing `null` clears it and reverts to the built-in token subset.
+
+Example:
+
+```ts
+import dayjs from 'dayjs';
+import { setDayjsTemplateReference, renderTemplate } from 'crytemplate';
+
+setDayjsTemplateReference(dayjs);
+
+const out = renderTemplate("{{ d | dateformat('MMM YYYY') }}", { d: new Date() });
+```
 
 ### Custom filters
 
