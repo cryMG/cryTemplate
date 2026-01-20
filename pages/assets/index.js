@@ -65,6 +65,11 @@ const examples = {
       '',
       '{%# This is a comment. It will not render. %}',
       '',
+      '{%#',
+      '  Comments can span',
+      '  multiple lines.',
+      '%}',
+      '',
       'User email: {{ user.email || "(missing)" }}',
     ].join('\n'),
     data: {

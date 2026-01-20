@@ -91,6 +91,7 @@ const out = renderTemplate('Hello {{ name }}!', { name: 'Alex' });
               <a class="docToc__link" href="#filters">Filters</a>
               <a class="docToc__link" href="#conditionals">Conditionals</a>
               <a class="docToc__link" href="#loops">Loops</a>
+              <a class="docToc__link" href="#comments">Comments</a>
               <a class="docToc__link" href="#robustness">Robustness</a>
               <a class="docToc__link" href="#custom-filters">Custom filters</a>
             </aside>
@@ -258,6 +259,15 @@ const out = renderTemplate("{{ d | dateformat('MMM YYYY') }}", { d: new Date() }
   inside={{ it }}
 {% endeach %}
 outside-again={{ it }}</code></pre>
+
+              <h2 id="comments">Comments</h2>
+              <p class="muted">Add comments using <code>{%# ... %}</code> blocks. Comments are ignored during rendering.</p>
+              <pre class="codeblock"><code class="language-twig">{%# This is a comment %}
+
+{%#
+  This is also a comment.
+  It can span multiple lines.
+%}</code></pre>
 
               <h2 id="robustness">Robustness</h2>
               <p class="muted">

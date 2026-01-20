@@ -324,6 +324,19 @@ Loops can be nested and combined with conditionals:
 {% endeach %}
 ```
 
+## Comments
+
+Comments can be added using `{%# comment %}` blocks:
+
+```txt
+{%# This is a comment %}
+
+{%#
+  This is also a comment.
+  It can span multiple lines.
+%}
+```
+
 ## Filters
 
 Filters can be applied to interpolations using a pipe syntax:
