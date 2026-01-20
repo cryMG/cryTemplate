@@ -54,7 +54,8 @@
     "release": "release-script",
     "test:mocha": "mocha --import=tsx",
     "test": "c8 --all --reporter=text-summary --reporter=json-summary --reporter=lcov npm run test:mocha -- ",
-    "coverage:summary": "tsx scripts/coverage-summary.ts"
+    "coverage:summary": "tsx scripts/coverage-summary.ts",
+    "bench": "tsx scripts/bench.ts"
   },
   "devDependencies": {
     "@alcalzone/release-script": "^5.0.0",

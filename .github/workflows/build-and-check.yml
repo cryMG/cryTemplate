@@ -202,3 +202,49 @@ jobs:
           npx github-actions-ctrf failed reports/test-results.json
           npm run coverage:summary
         if: always()
+
+  bench:
+    name: Run benchmark
+
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
+
+    needs: install-and-build
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 24.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: 'npm'
+
+      - name: Cache node_modules
+        id: npm-cache
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: |
+            node_modules
+          key: ${{ runner.os }}-install-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-install-${{ env.cache-name }}-
+            ${{ runner.os }}-install-
+            ${{ runner.os }}-
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist
+
+      - name: Benchmark
+        run: |
+          npm run bench -- --format=md --iterations=10000 --warmup=500 --unique=64 >> "$GITHUB_STEP_SUMMARY"
+        env:
+          NODE_OPTIONS: ""
+        if: always()

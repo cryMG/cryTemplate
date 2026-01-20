@@ -592,6 +592,46 @@ Notes:
 * Register filters once during application startup (the registry is global to the module).
 * Re-registering the same name overrides the previous handler (including built-ins).
 
+## Tests
+
+Nearly all of the engine code is covered by unit tests.
+
+Run the test suite with:
+
+```bash
+npm test
+```
+
+## Benchmarks
+
+You can run a micro-benchmark that measures:
+
+* `parse`: parsing/compiling only (`tplParse`)
+* `render`: rendering only on pre-parsed templates (`tplRenderNodes`)
+* `parse+render`: parse + render in the hot loop
+
+```bash
+npm run bench
+```
+
+Optional knobs:
+
+```bash
+npm run bench -- --iterations=20000 --warmup=2000 --unique=128
+```
+
+Run a single mode only:
+
+```bash
+npm run bench -- --mode=parse
+npm run bench -- --mode=render
+npm run bench -- --mode=parse+render
+```
+
+> [!NOTE]
+> "Parsing" is not standardized across engines. Some libraries expose a parser, others only a compile step.
+> The benchmark output is therefore indicative only, and engines differ in features and security model.
+
 ## License
 
 MIT License. See LICENSE file for details.
