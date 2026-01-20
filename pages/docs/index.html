@@ -162,7 +162,7 @@ const out = renderTemplate('Hello {{ name }}!', { name: 'Alex' });
               <p class="muted">Lowercases the string representation. Returns <code>''</code> for <code>null</code>/<code>undefined</code>.</p>
 
               <h4><code>trim</code></h4>
-              <p class="muted">Trims surrounding whitespace from the string representation. Returns <code>''</code> for <code>null</code>/<code>undefined</code>.</p>
+              <p class="muted">Trims whitespace from the string representation. Returns <code>''</code> for <code>null</code>/<code>undefined</code>. Optional mode: <code>trim('left')</code>, <code>trim('right')</code>, <code>trim('both')</code> (default).</p>
 
               <h4><code>replace(from, to)</code></h4>
               <p class="muted">Performs a literal, global replacement on the string representation. If <code>from</code> is <code>''</code>, the input is returned unchanged.</p>

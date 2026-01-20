@@ -27,6 +27,16 @@ describe('template rendering / filters', function () {
     assert.strictEqual(renderTemplate('{{ v | trim }}', { v: '  x  \n' }), 'x');
   });
 
+  it('trim(mode) supports left, right and both (default)', function () {
+    assert.strictEqual(renderTemplate("{{ v | trim('left') }}", { v: '  x  ' }), 'x  ');
+    assert.strictEqual(renderTemplate("{{ v | trim('right') }}", { v: '  x  \n' }), '  x');
+    assert.strictEqual(renderTemplate("{{ v | trim('both') }}", { v: '  x  \n' }), 'x');
+  });
+
+  it('trim falls back to both for unknown mode', function () {
+    assert.strictEqual(renderTemplate("{{ v | trim('nope') }}", { v: '  x  \n' }), 'x');
+  });
+
   it('number() formats numeric output with optional precision', function () {
     assert.strictEqual(renderTemplate('{{ v | number }}', { v: 12.5 }), '12.5');
     assert.strictEqual(renderTemplate('{{ v | number(2) }}', { v: 1.234 }), '1.23');

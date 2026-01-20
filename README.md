@@ -387,9 +387,17 @@ Example: `{{ user.name | lower }}`
 
 #### `trim`
 
-Trims surrounding whitespace from the string representation of the value. Returns `''` for `null`/`undefined`.
+Trims whitespace from the string representation of the value. Returns `''` for `null`/`undefined`.
 
-Example: `{{ user.name | trim }}`
+Optional mode (first argument):
+
+* `trim('left')` → `trimStart()`
+* `trim('right')` → `trimEnd()`
+* `trim('both')` → `trim()` (default)
+
+Unknown mode values fall back to `both`.
+
+Example: `{{ user.name | trim }}` or `{{ user.name | trim('left') }}` / `{{ user.name | trim('right') }}`
 
 #### `replace(from, to)`
 

@@ -38,7 +38,7 @@ export interface TplFilter {
    * Name of the filter to apply.
    * - upper(): toUpperCase
    * - lower(): toLowerCase
-   * - trim(): trim whitespace at both ends
+   * - trim([mode]): trim whitespace; mode is 'left', 'right' or 'both' (default)
    * - number(decimals[, decimalSep[, thousandsSep]]):
    *     Format numeric values with fixed decimals. With 1 arg, just fixed decimals using '.' as decimal separator.
    *     With 2 args, set the decimal separator (no thousands grouping).
