@@ -94,6 +94,8 @@ If you want to render the same template multiple times with different data, you 
 * `tplParse(tpl)`
 * `tplRenderNodes(nodes, scopes)`
 
+Where `scopes` is a stack (array) of objects.
+
 Example:
 
 ```ts
@@ -112,7 +114,7 @@ const out2 = tplRenderNodes(nodes, [ { name: ' Sam ' } ]);
 * The first entry is the root scope.
 
 ```ts
-import { tplParse, tplRenderNodes } from 'crytemplate';
+import { renderTemplate, tplParse, tplRenderNodes } from 'crytemplate';
 
 const nodes = tplParse('App={{ appName }}, User={{ user.name }}');
 
@@ -122,6 +124,9 @@ const data = { user: { name: 'Alex' } };
 // globals is the root scope, data is the innermost scope
 const out = tplRenderNodes(nodes, [ globals, data ]);
 // => "App=cryTemplate, User=Alex"
+
+// renderTemplate() also supports multiple scopes (rest args)
+const out2 = renderTemplate('App={{ appName }}, User={{ user.name }}', globals, data);
 ```
 
 ## Interpolations
