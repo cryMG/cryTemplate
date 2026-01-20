@@ -10,6 +10,11 @@ import {
 
 // re-export some functions
 export {
+  tplParse,
+  tplRenderNodes,
+} from './template-parser.js';
+
+export {
   escapeHtml,
   unescapeHtml,
 } from './html-utils.js';

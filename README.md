@@ -85,6 +85,45 @@ They expose a global `cryTemplate` object.
 </html>
 ```
 
+### Parse once, render many (advanced)
+
+If you want to render the same template multiple times with different data, you can parse it once and re-use the parsed node list.
+
+`renderTemplate()` is a convenience wrapper around:
+
+* `tplParse(tpl)`
+* `tplRenderNodes(nodes, scopes)`
+
+Example:
+
+```ts
+import { tplParse, tplRenderNodes } from 'crytemplate';
+
+const nodes = tplParse('Hello {{ name | trim }}!');
+
+const out1 = tplRenderNodes(nodes, [ { name: ' Alex ' } ]);
+const out2 = tplRenderNodes(nodes, [ { name: ' Sam ' } ]);
+// => out1 === "Hello Alex!"; out2 === "Hello Sam!"
+```
+
+`tplRenderNodes()` takes a scope stack. Resolution is safe-by-default (own properties only, no prototype traversal, no getter execution).
+
+* The last entry is the innermost scope (it shadows earlier scopes).
+* The first entry is the root scope.
+
+```ts
+import { tplParse, tplRenderNodes } from 'crytemplate';
+
+const nodes = tplParse('App={{ appName }}, User={{ user.name }}');
+
+const globals = { appName: 'cryTemplate' };
+const data = { user: { name: 'Alex' } };
+
+// globals is the root scope, data is the innermost scope
+const out = tplRenderNodes(nodes, [ globals, data ]);
+// => "App=cryTemplate, User=Alex"
+```
+
 ## Interpolations
 
 Interpolations insert data into the output using double curly braces.

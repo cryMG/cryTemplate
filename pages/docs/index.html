@@ -63,6 +63,27 @@ const out = renderTemplate('Hello {{ name }}!', { name: 'Alex' });
   console.log(out);
 &lt;/script&gt;</code></pre>
             </div>
+
+            <div class="docExample" id="parse-render">
+              <div class="docExample__head">
+                <div>
+                  <div class="docExample__title">Parse once, render many (advanced)</div>
+                  <div class="muted">Parse a template once and render it multiple times with different data.</div>
+                </div>
+              </div>
+              <pre class="codeblock"><code class="language-typescript">import { tplParse, tplRenderNodes } from 'crytemplate';
+
+const nodes = tplParse('Hello {{ name | trim }}!');
+
+const out1 = tplRenderNodes(nodes, [ { name: ' Alex ' } ]);
+const out2 = tplRenderNodes(nodes, [ { name: ' Sam ' } ]);
+// => "Hello Alex!" and "Hello Sam!"
+
+// Scopes are a stack (array): last entry is the innermost scope.
+const globals = { appName: 'cryTemplate' };
+const data = { user: { name: 'Alex' } };
+const out3 = tplRenderNodes(tplParse('App={{ appName }}, User={{ user.name }}'), [ globals, data ]);</code></pre>
+            </div>
           </div>
 
           <div class="note">
