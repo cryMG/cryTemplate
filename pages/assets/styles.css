@@ -15,7 +15,10 @@
 }
 
 * { box-sizing: border-box; }
-html, body { height: 100%; }
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+}
 body {
   margin: 0;
   font-family: var(--sans);
@@ -24,15 +27,16 @@ body {
     radial-gradient(1200px 600px at 20% -10%, rgba(0, 117, 117, 0.45), transparent 65%),
     radial-gradient(1000px 500px at 90% 10%, rgba(0, 160, 160, 0.20), transparent 60%),
     linear-gradient(180deg, #060809 0%, #070a0b 60%, #070a0b 100%);
-  background-attachment: fixed;
+  /* Avoid mobile scroll glitches (iOS/Android) caused by fixed backgrounds */
+  background-attachment: scroll;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body { background-attachment: fixed; }
 }
 
 a { color: inherit; }
 code { font-family: var(--mono); font-size: 0.95em; }
-
-/* Keep highlight.js background from overriding our code blocks */
-.codeblock code.hljs { background: transparent; padding: 0; }
-.codeblock code { display: block; overflow-x: auto; }
 
 .container {
   width: min(1100px, calc(100% - 40px));
@@ -194,6 +198,8 @@ h1 {
 
 .codeblock {
   margin: 0;
+  width: 100%;
+  min-width: 0;
   border-radius: 12px;
   padding: 14px;
   background: rgba(0, 0, 0, 0.32);
@@ -201,7 +207,15 @@ h1 {
   font-family: var(--mono);
   font-size: 0.95rem;
   line-height: 1.5;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y;
 }
+.codeblock code { display: block; }
+/* Keep highlight.js background from overriding our code blocks */
+.codeblock code.hljs { background: transparent; padding: 0; }
+
 
 .hero__result { margin-top: 14px; display: grid; gap: 6px; }
 .hero__resultLabel { color: var(--muted); font-size: 0.92rem; }
@@ -276,15 +290,17 @@ h2 { margin: 0 0 6px; font-size: 1.7rem; }
 .docProse h3 { margin: 18px 0 8px; }
 .docProse h4 { margin: 14px 0 6px; }
 .docProse p { margin: 8px 0 12px; line-height: 1.6; }
-.docProse pre { margin: 10px 0 14px; }
+.docProse pre { margin: 10px 0 14px; max-width: 100%; }
 
 .docExamples {
   display: grid;
   grid-template-columns: 1fr;
   gap: 14px;
+  min-width: 0;
 }
 
 .docExample {
+  min-width: 0;
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border);

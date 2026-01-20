@@ -173,8 +173,8 @@ const out = renderTemplate('Hello {{ name }}!', { name: 'Alex' });
               <h4><code>number(decimals?, decimalSep?, thousandsSep?)</code></h4>
               <p class="muted">Formats numbers. It tries <code>Number(value)</code> if the value is not already a number.</p>
               <p class="muted">If the numeric result is not finite, it returns <code>''</code> for <code>null</code>/<code>undefined</code> and otherwise <code>String(value)</code>.</p>
-              <pre class="codeblock"><code class="language-twig">{{ price | number(2) }}        // 1234.50
-{{ price | number(2, ',') }}    // 1234,50
+              <pre class="codeblock"><code class="language-twig">{{ price | number(2) }}           // 1234.50
+{{ price | number(2, ',') }}      // 1234,50
 {{ price | number(2, ',', '.') }} // 1.234,50</code></pre>
 
               <h4><code>json</code></h4>
