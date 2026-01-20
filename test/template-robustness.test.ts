@@ -21,6 +21,11 @@ describe('template rendering / robustness', function () {
     assert.strictEqual(renderTemplate(tpl, {}), 'A{% endif %}B');
   });
 
+  it('does not remove newline after misplaced control token', function () {
+    const tpl = 'A{% endif %}\nB';
+    assert.strictEqual(renderTemplate(tpl, {}), 'A{% endif %}\nB');
+  });
+
   it('elseif without if kept as text', function () {
     const tpl = 'X{% elseif a %}Y';
     assert.strictEqual(renderTemplate(tpl, { a: 1 }), 'X{% elseif a %}Y');

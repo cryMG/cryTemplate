@@ -71,6 +71,16 @@ export const tplParse = (tpl: string): TplNode[] => {
   const nodesStack: TplNode[][] = [ root ];
   const controlStack: Frame[] = [];
 
+  const skipOneNewlineAfterControlToken = (idx0: number): number => {
+    if (idx0 >= tpl.length) return idx0;
+    if (tpl[idx0] === '\r') {
+      if (idx0 + 1 < tpl.length && tpl[idx0 + 1] === '\n') return idx0 + 2;
+      return idx0 + 1;
+    }
+    if (tpl[idx0] === '\n') return idx0 + 1;
+    return idx0;
+  };
+
   const reToken = /\{\{|\{%|\{#/g;
   let idx = 0;
   while (idx < tpl.length) {
@@ -318,12 +328,14 @@ export const tplParse = (tpl: string): TplNode[] => {
         break;
       }
       const raw = tpl.slice(start + 2, end).trim();
+      let preservedAsText = false;
       /**
        * Push a literal control token back into output as plain text.
        *
        * @param v - Literal token text.
        */
       const pushTextToken = (v: string): void => {
+        preservedAsText = true;
         tplPush(nodesStack, { type: 'text', value: v });
       };
       if (/^if\s+/i.test(raw)) {
@@ -342,9 +354,10 @@ export const tplParse = (tpl: string): TplNode[] => {
         tplParseEndEach(tpl.slice(start, end + 2), nodesStack, controlStack, pushTextToken);
       } else {
         // Unknown control -> keep literal
+        preservedAsText = true;
         tplPush(nodesStack, { type: 'text', value: tpl.slice(start, end + 2) });
       }
-      idx = end + 2;
+      idx = preservedAsText ? (end + 2) : skipOneNewlineAfterControlToken(end + 2);
     }
   }
 

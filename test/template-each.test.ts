@@ -11,6 +11,18 @@ describe('template rendering / each', function () {
     ensureDom();
   });
 
+  describe('newline trimming after control tokens', function () {
+    it('removes one newline after each/endeach tags', function () {
+      const tpl = '{% each items as it %}\n[{{ it }}]\n{% endeach %}\nX';
+      assert.strictEqual(renderTemplate(tpl, { items: [ 1, 2 ] }), '[1]\n[2]\nX');
+    });
+
+    it('does not remove non-newline whitespace after %}', function () {
+      const tpl = '{% each items as it %} [{{ it }}]{% endeach %}';
+      assert.strictEqual(renderTemplate(tpl, { items: [ 'a', 'b' ] }), ' [a] [b]');
+    });
+  });
+
   it('renders children for each array item', function () {
     const tpl = '{% each items as it %}[{{ it }}]{% endeach %}';
     assert.strictEqual(renderTemplate(tpl, { items: [ 1, 2, 3 ] }), '[1][2][3]');

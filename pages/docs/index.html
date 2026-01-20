@@ -92,6 +92,7 @@ const out = renderTemplate('Hello {{ name }}!', { name: 'Alex' });
               <a class="docToc__link" href="#conditionals">Conditionals</a>
               <a class="docToc__link" href="#loops">Loops</a>
               <a class="docToc__link" href="#comments">Comments</a>
+              <a class="docToc__link" href="#whitespace-handling">Whitespace handling</a>
               <a class="docToc__link" href="#robustness">Robustness</a>
               <a class="docToc__link" href="#custom-filters">Custom filters</a>
             </aside>
@@ -268,10 +269,24 @@ outside-again={{ it }}</code></pre>
   It can span multiple lines.
 #}</code></pre>
 
+              <h2 id="whitespace-handling">Whitespace handling</h2>
+              <p class="muted">cryTemplate performs a small whitespace normalization around control tags to make “block style” templates behave closer to what users typically expect.</p>
+              <ul class="list">
+                <li><strong>Trim after control tags:</strong> exactly one line break immediately after a correctly parsed control tag closing <code>%}</code> is removed.</li>
+                <li><strong>Supported line breaks:</strong> <code>\n</code> and <code>\r\n</code>.</li>
+                <li><strong>Only one:</strong> if multiple line breaks follow, only the first one is removed.</li>
+                <li><strong>No other trimming:</strong> spaces/tabs after <code>%}</code> are not removed.</li>
+                <li><strong>Fail-safe behavior:</strong> misplaced/malformed control tokens preserved as literal text do not trigger trimming.</li>
+              </ul>
+              <pre class="codeblock"><code class="language-twig">{% if user %}
+Hello {{ user.name }}
+{% endif %}
+Goodbye</code></pre>
+              <p class="muted">In this example, the newline directly after <code>{% if user %}</code> and after <code>{% endif %}</code> is removed, so <code>Hello ...</code> and <code>Goodbye</code> render without extra blank lines.</p>
+
               <h2 id="robustness">Robustness</h2>
-              <p class="muted">
-                Malformed or misplaced control tokens degrade to literal text instead of throwing at runtime.
-              </p>
+              <p class="muted">Malformed or misplaced control tokens degrade to literal text instead of throwing at runtime.</p>
+              <p class="muted">In that case, the engine also keeps any following whitespace/newlines unchanged.</p>
 
               <h2 id="custom-filters">Custom filters</h2>
               <p class="muted">You can register custom filters at runtime. Unknown filters in templates are ignored; registered filters are applied left-to-right.</p>

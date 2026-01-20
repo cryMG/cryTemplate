@@ -11,6 +11,25 @@ describe('template rendering / if-elseif-else', function () {
     ensureDom();
   });
 
+  describe('newline trimming after control tokens', function () {
+    it('removes one newline after %} (LF)', function () {
+      const tpl = '{% if a %}\nA\n{% endif %}\nB';
+      assert.strictEqual(renderTemplate(tpl, { a: 1 }), 'A\nB');
+      assert.strictEqual(renderTemplate(tpl, { a: 0 }), 'B');
+    });
+
+    it('removes one newline after %} (CRLF)', function () {
+      const tpl = '{% if a %}\r\nA\r\n{% endif %}\r\nB';
+      assert.strictEqual(renderTemplate(tpl, { a: 1 }), 'A\r\nB');
+      assert.strictEqual(renderTemplate(tpl, { a: 0 }), 'B');
+    });
+
+    it('removes only a single newline when multiple follow', function () {
+      const tpl = '{% if a %}\n\nA{% endif %}';
+      assert.strictEqual(renderTemplate(tpl, { a: 1 }), '\nA');
+    });
+  });
+
   it('basic if true renders consequent', function () {
     const tpl = '{% if a %}A{% endif %}';
     assert.strictEqual(renderTemplate(tpl, { a: 1 }), 'A');

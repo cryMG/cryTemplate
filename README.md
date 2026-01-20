@@ -335,6 +335,27 @@ Comments can be added using `{# comment #}` blocks:
 #}
 ```
 
+## Whitespace handling
+
+cryTemplate performs a small whitespace normalization around control tags to make “block style” templates behave closer to what users typically expect.
+
+Rules:
+
+* **Trim after control tags:** exactly one line break immediately after a correctly parsed control tag closing `%}` is removed.
+* **Supported line breaks:** `\n` and `\r\n`.
+* **Only one:** if multiple line breaks follow, only the first one is removed.
+* **No other trimming:** spaces/tabs after `%}` are not removed.
+* **Fail-safe behavior:** misplaced/malformed control tokens preserved as literal text do **not** trigger trimming.
+
+Example:
+
+```txt
+{% if user %}
+Hello {{ user.name }}
+{% endif %}
+Goodbye
+```
+
 ## Filters
 
 Filters can be applied to interpolations using a pipe syntax:
