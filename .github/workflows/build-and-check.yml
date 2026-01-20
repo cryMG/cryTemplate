@@ -244,7 +244,7 @@ jobs:
 
       - name: Benchmark
         run: |
-          npm run bench -- --format=md --iterations=10000 --warmup=500 --unique=64 >> "$GITHUB_STEP_SUMMARY"
+          npm run --silent bench -- --format=md --iterations=10000 --warmup=500 --unique=64 >> "$GITHUB_STEP_SUMMARY"
         env:
           NODE_OPTIONS: ""
         if: always()
