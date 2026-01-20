@@ -18,6 +18,8 @@ Many existing template engines either allow arbitrary code execution (e.g., via 
 
 ## Highlights
 
+* Zero dependencies (pure TypeScript/JavaScript)
+* Small and fast (~5 KiB minified + gzipped)
 * HTML-escapes interpolations by default (`{{ ... }}`)
 * Raw HTML output is explicit (`{{= ... }}`)
 * No arbitrary JavaScript execution from templates (secure and predictable)
