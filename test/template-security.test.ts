@@ -109,21 +109,14 @@ describe('template rendering / security', function () {
         const key = 'k' + i;
         const val = randStr(20);
         const tpl1 = `[[{{ ${key} }}]]`;
-        const tpl2 = `[[{{= ${key} }}]]`;
         const out1 = renderTemplate(tpl1, { [key]: val });
-        const out2 = renderTemplate(tpl2, { [key]: val });
         const escaped = escapeHtml(val);
         assert.strictEqual(out1, `[[${escaped}]]`);
-        assert.strictEqual(out2, `[[${escaped}]]`);
         // ensure no raw specials remain
         assert.notInclude(out1, '<');
         assert.notInclude(out1, '>');
         assert.notInclude(out1, '"');
         assert.notInclude(out1, "'");
-        assert.notInclude(out2, '<');
-        assert.notInclude(out2, '>');
-        assert.notInclude(out2, '"');
-        assert.notInclude(out2, "'");
       }
     });
 
@@ -131,14 +124,14 @@ describe('template rendering / security', function () {
       for (let i = 0; i < 50; i++) {
         const key = 'r' + i;
         const val = randStr(25);
-        const tpl = `PRE{{- ${key} }}POST`;
+        const tpl = `PRE{{= ${key} }}POST`;
         const out = renderTemplate(tpl, { [key]: val });
         assert.strictEqual(out, `PRE${String(val)}POST`);
       }
     });
 
     it('should not throw on mixed/random templates', function () {
-      const tokens = [ '{{', '{{=', '{{-', '}}' ];
+      const tokens = [ '{{', '{{=', '}}' ];
       for (let i = 0; i < 30; i++) {
         let tpl = '';
         for (let j = 0; j < 10; j++) {
@@ -170,23 +163,18 @@ describe('template rendering / security', function () {
       assert.strictEqual(html, 'A&lt;em&gt;hi&quot;&lt;/em&gt;B');
     });
 
-    it('escaped variant {{= key }} matches default', function () {
+    it('raw variant {{= key }} inserts as-is', function () {
       const html = renderTemplate('A{{= x }}B', { x: '<em>hi"</em>' });
-      assert.strictEqual(html, 'A&lt;em&gt;hi&quot;&lt;/em&gt;B');
-    });
-
-    it('raw variant {{- key }} inserts as-is', function () {
-      const html = renderTemplate('A{{- x }}B', { x: '<em>ok</em>' });
-      assert.strictEqual(html, 'A<em>ok</em>B');
+      assert.strictEqual(html, 'A<em>hi"</em>B');
     });
 
     it('raw interpolation still applies fallback', function () {
-      const html = renderTemplate('{{- html || "<em>x</em>" }}', { html: '' });
+      const html = renderTemplate('{{= html || "<em>x</em>" }}', { html: '' });
       assert.strictEqual(html, '<em>x</em>');
     });
 
     it('raw injection: no escaping', function () {
-      const tpl = '{{- html }}';
+      const tpl = '{{= html }}';
       assert.strictEqual(renderTemplate(tpl, { html: '<span x="y">z</span>' }), '<span x="y">z</span>');
     });
   });

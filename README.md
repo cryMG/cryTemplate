@@ -18,8 +18,8 @@ Many existing template engines either allow arbitrary code execution (e.g., via 
 
 ## Highlights
 
-* HTML-escapes interpolations (`{{ ... }}` / `{{= ... }}`)
-* Raw HTML is opt-in only (`{{- ... }}`)
+* HTML-escapes interpolations by default (`{{ ... }}`)
+* Raw HTML output is explicit (`{{= ... }}`)
 * No arbitrary JavaScript execution from templates (secure and predictable)
 * Basics included: interpolations, `{% if %}` conditionals, `{% each %}` loops, comments
 * Filters with a pipe syntax (`{{ value | trim | upper }}`), including `dateformat`
@@ -90,8 +90,7 @@ Interpolations insert data into the output using double curly braces.
 Supported forms:
 
 * `{{ key }}`: HTML-escaped insertion (default)
-* `{{= key }}`: HTML-escaped insertion (explicit)
-* `{{- key }}`: raw insertion (no HTML escaping)
+* `{{= key }}`: raw insertion (no HTML escaping)
 
 Where `key` is an identifier or dot-path identifier:
 
@@ -111,13 +110,12 @@ By default, interpolation output is HTML-escaped (safe-by-default):
 
 ```txt
 {{ title }}
-{{= title }}
 ```
 
 Raw insertion bypasses escaping:
 
 ```txt
-{{- trustedHtml }}
+{{= trustedHtml }}
 ```
 
 Only use raw insertion for already-sanitized, fully trusted HTML.
@@ -346,7 +344,7 @@ Filters can be applied to interpolations using a pipe syntax:
 {{ key | filterName(arg1, arg2) | otherFilter }}
 ```
 
-Filters are applied **left-to-right**. After all filters have been applied, the final value is converted to a string (`null`/`undefined` become an empty string) and then HTML-escaped unless you use the raw interpolation form `{{- ... }}`.
+Filters are applied **left-to-right**. After all filters have been applied, the final value is converted to a string (`null`/`undefined` become an empty string) and then HTML-escaped unless you use the raw interpolation form `{{= ... }}`.
 
 ### Filter names
 

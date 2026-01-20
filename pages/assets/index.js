@@ -54,7 +54,7 @@ const examples = {
     },
   },
   escape: {
-    tpl: "Escaped (default): {{ html }}\n\nRaw (opt-in): {{- html }}",
+    tpl: "Escaped (default): {{ html }}\n\nRaw (explicit): {{= html }}",
     data: {
       html: '<strong>Trusted?</strong> <em>Escape-by-default</em> & <script>alert(1)</script>',
     },

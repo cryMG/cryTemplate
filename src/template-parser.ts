@@ -56,7 +56,7 @@ const tplPush = (stack: TplNode[][], n: TplNode): void => {
  * Parse a template string to an AST.
  *
  * Recognized syntax:
- * - Interpolations: {{ key }}, {{= key }} (escaped), {{- key }} (raw)
+ * - Interpolations: {{ key }} (escaped), {{= key }} (raw)
  * - Controls: {% if test %}, {% elseif test %}, {% else %}, {% endif %}
  *             {% each listExpr as var %}, {% endeach %}
  *
@@ -91,13 +91,13 @@ export const tplParse = (tpl: string): TplNode[] => {
         break;
       }
       const inner = tpl.slice(start + 2, end).trim();
-      // Support: {{ key }} | {{= key }} | {{- key }}
+      // Support: {{ key }} (escaped) | {{= key }} (raw)
       // Fallbacks: {{ key || 'fallback' }} or chains with || and ??
       // Filters: {{ expr | upper | number(2) | json }}
-      const reMode = /^([-=]?)([\s\S]*)$/;
+      const reMode = /^([=]?)([\s\S]*)$/;
       const mm = reMode.exec(inner);
       if (mm) {
-        const mode: 'escape' | 'raw' = (mm[1] === '-') ? 'raw' : 'escape';
+        const mode: 'escape' | 'raw' = (mm[1] === '=') ? 'raw' : 'escape';
         let expr = mm[2].trim();
 
         // Split off filters segment at first single '|' (not '||'), outside of quotes

@@ -111,8 +111,7 @@ const out = renderTemplate('Hello {{ name }}!', { name: 'Alex' });
               <h2 id="escaping">Escaping</h2>
               <p class="muted">Escaped output is the default. Raw output is explicit.</p>
               <pre class="codeblock"><code class="language-twig">{{ value }}   // escaped (default)
-{{= value }}  // escaped (explicit)
-{{- value }}  // raw (opt-in)</code></pre>
+{{= value }}  // raw (no escaping)</code></pre>
 
               <h2 id="dot-path">Dot-path resolution</h2>
               <p class="muted">Use dot-paths to traverse nested objects.</p>
@@ -331,7 +330,7 @@ const out = renderTemplate('Hello {{ name | slug }}!', { name: 'John Doe' });</c
                 <button class="button button--small" type="button" data-run>Run</button>
               </div>
               <pre class="codeblock" data-tpl><code class="language-twig">Escaped: {{ html }}
-Raw: {{- html }}</code></pre>
+Raw: {{= html }}</code></pre>
               <pre class="codeblock" data-data><code class="language-json">{
   "html": "&lt;strong&gt;Trusted?&lt;/strong&gt; &amp; &lt;script&gt;alert(1)&lt;/script&gt;"
 }</code></pre>

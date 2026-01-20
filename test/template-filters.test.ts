@@ -50,8 +50,8 @@ describe('template rendering / filters', function () {
 
   it('json serializes values', function () {
     // Use raw to avoid HTML entity escaping
-    assert.strictEqual(renderTemplate('{{- obj | json }}', { obj: { a: 1 } }), '{"a":1}');
-    assert.strictEqual(renderTemplate('{{- arr | json }}', { arr: [ 1, 'x' ] }), '[1,"x"]');
+    assert.strictEqual(renderTemplate('{{= obj | json }}', { obj: { a: 1 } }), '{"a":1}');
+    assert.strictEqual(renderTemplate('{{= arr | json }}', { arr: [ 1, 'x' ] }), '[1,"x"]');
   });
 
   it('text converts value to string but leaves null or undefined as empty string', function () {
