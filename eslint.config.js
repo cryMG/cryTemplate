@@ -27,6 +27,15 @@ export default defineConfig(
         ],
       },
     },
+    rules: {
+      '@stylistic/spaced-comment': [
+        'warn',
+        'always',
+        {
+          exceptions: [ '!' ],
+        },
+      ],
+    },
   },
 
   /*

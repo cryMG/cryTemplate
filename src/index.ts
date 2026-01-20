@@ -1,6 +1,13 @@
-/*
- * Lightweight and safe-by-default string template engine.
+/*!
+ * cryTemplate
  *
+ * Lightweight and safe-by-default string template engine with zero dependencies.
+ *
+ * No code execution from templates – just string magic with interpolation,
+ * control flow, iteration, filters, and HTML escaping.
+ *
+ * Copyright (c) 2025-2026 cryeffect Media Group <https://crymg.de>, Peter Müller
+ * Licensed under the MIT License.
  */
 
 import {
