@@ -5,6 +5,7 @@ import type {
   TplIfTestCompareRight,
   TplInterpNode,
   TplNode,
+  TplTextNode,
 } from './types.js';
 
 import {
@@ -71,6 +72,33 @@ export const tplParse = (tpl: string): TplNode[] => {
   const nodesStack: TplNode[][] = [ root ];
   const controlStack: Frame[] = [];
 
+  type TplWsTrimMode = 'all' | 'no-newlines' | null;
+
+  const toTrimMode = (ch: string | undefined): TplWsTrimMode => {
+    if (ch === '-') return 'all';
+    if (ch === '~') return 'no-newlines';
+    return null;
+  };
+
+  const trimEndByMode = (s: string, mode: TplWsTrimMode): string => {
+    if (!mode) return s;
+    if (mode === 'all') return s.replace(/\s+$/g, '');
+    // whitespace except newlines (keep \r and \n)
+    return s.replace(/[^\S\r\n]+$/g, '');
+  };
+
+  const skipWsForwardByMode = (idx0: number, mode: TplWsTrimMode): number => {
+    if (!mode) return idx0;
+    let i = idx0;
+    for (; i < tpl.length; i++) {
+      const ch = tpl[i];
+      if (mode === 'no-newlines' && (ch === '\r' || ch === '\n')) break;
+      if (/\s/.test(ch)) continue;
+      break;
+    }
+    return i;
+  };
+
   const skipOneNewlineAfterControlToken = (idx0: number): number => {
     if (idx0 >= tpl.length) return idx0;
     if (tpl[idx0] === '\r') {
@@ -91,21 +119,43 @@ export const tplParse = (tpl: string): TplNode[] => {
       break;
     }
     const start = m.index;
-    if (start > idx) tplPush(nodesStack, { type: 'text', value: tpl.slice(idx, start) });
+    // Detect optional whitespace-trim marker right after the opener: - or ~
+    const openTrimMode: TplWsTrimMode = toTrimMode(tpl[start + 2]);
+    const openLen = 2 + (openTrimMode ? 1 : 0);
+
+    // Always push the pre-token text as-is. Only apply left-trim if the token is actually consumed.
+    let preTextNode: TplTextNode | null = null;
+    if (start > idx) {
+      const tn = { type: 'text' as const, value: tpl.slice(idx, start) };
+      tplPush(nodesStack, tn);
+      preTextNode = tn;
+    }
+
+    const applyLeftTrimIfNeeded = (tokenConsumed: boolean): void => {
+      if (!tokenConsumed) return;
+      if (!openTrimMode) return;
+      if (!preTextNode) return;
+      preTextNode.value = trimEndByMode(preTextNode.value, openTrimMode);
+    };
     if (m[0] === '{{') {
       // Interpolation token
-      const end = tpl.indexOf('}}', start + 2);
+      const end = tpl.indexOf('}}', start + openLen);
       if (end === -1) {
         // Unterminated interpolation: keep the rest as text
         tplPush(nodesStack, { type: 'text', value: tpl.slice(start) });
         break;
       }
-      const inner = tpl.slice(start + 2, end).trim();
+      const closeTrimMode: TplWsTrimMode = toTrimMode(tpl[end - 1]);
+      const innerEnd = closeTrimMode ? (end - 1) : end;
+      const inner = tpl.slice(start + openLen, innerEnd).trim();
       // Support: {{ key }} (escaped) | {{= key }} (raw)
       // Fallbacks: {{ key || 'fallback' }} or chains with || and ??
       // Filters: {{ expr | upper | number(2) | json }}
       const reMode = /^([=]?)([\s\S]*)$/;
       const mm = reMode.exec(inner);
+      let parsedAsInterpNode = false;
+      let interpNode: TplInterpNode | null = null;
+      let literalText: string | null = null;
       if (mm) {
         const mode: 'escape' | 'raw' = (mm[1] === '=') ? 'raw' : 'escape';
         let expr = mm[2].trim();
@@ -297,37 +347,54 @@ export const tplParse = (tpl: string): TplNode[] => {
             }
             if (filters.length > 0) node.filters = filters;
           }
-          tplPush(nodesStack, node);
+          parsedAsInterpNode = true;
+          interpNode = node;
         } else if (tplIsIdentifier(expr)) {
-          tplPush(nodesStack, { type: 'interp', key: expr, mode });
+          parsedAsInterpNode = true;
+          interpNode = { type: 'interp', key: expr, mode };
         } else {
           // Not a supported interpolation: keep literal token
-          tplPush(nodesStack, { type: 'text', value: tpl.slice(start, end + 2) });
+          literalText = tpl.slice(start, end + 2);
         }
       } else {
         // Not a supported interpolation: keep literal token
-        tplPush(nodesStack, { type: 'text', value: tpl.slice(start, end + 2) });
+        literalText = tpl.slice(start, end + 2);
+      }
+
+      applyLeftTrimIfNeeded(parsedAsInterpNode);
+      if (parsedAsInterpNode && interpNode) {
+        tplPush(nodesStack, interpNode);
+      } else {
+        tplPush(nodesStack, { type: 'text', value: literalText ?? tpl.slice(start, end + 2) });
       }
       idx = end + 2;
+      // Only apply right-trim if the interpolation was actually parsed into a node.
+      // If it was preserved as literal text, trimming would be surprising.
+      if (closeTrimMode && parsedAsInterpNode) idx = skipWsForwardByMode(idx, closeTrimMode);
     } else if (m[0] === '{#') {
       // Comment token
-      const end = tpl.indexOf('#}', start + 2);
+      const end = tpl.indexOf('#}', start + openLen);
       if (end === -1) {
         // Unterminated comment: keep the rest as text
         tplPush(nodesStack, { type: 'text', value: tpl.slice(start) });
         break;
       }
+      const closeTrimMode: TplWsTrimMode = toTrimMode(tpl[end - 1]);
+      applyLeftTrimIfNeeded(true);
       // Comment is ignored completely (no output)
       idx = end + 2;
+      if (closeTrimMode) idx = skipWsForwardByMode(idx, closeTrimMode);
     } else {
       // Control token
-      const end = tpl.indexOf('%}', start + 2);
+      const end = tpl.indexOf('%}', start + openLen);
       if (end === -1) {
         // Unterminated control: keep the rest as text
         tplPush(nodesStack, { type: 'text', value: tpl.slice(start) });
         break;
       }
-      const raw = tpl.slice(start + 2, end).trim();
+      const closeTrimMode: TplWsTrimMode = toTrimMode(tpl[end - 1]);
+      const rawEnd = closeTrimMode ? (end - 1) : end;
+      const raw = tpl.slice(start + openLen, rawEnd).trim();
       let preservedAsText = false;
       /**
        * Push a literal control token back into output as plain text.
@@ -357,7 +424,16 @@ export const tplParse = (tpl: string): TplNode[] => {
         preservedAsText = true;
         tplPush(nodesStack, { type: 'text', value: tpl.slice(start, end + 2) });
       }
-      idx = preservedAsText ? (end + 2) : skipOneNewlineAfterControlToken(end + 2);
+
+      applyLeftTrimIfNeeded(!preservedAsText);
+      if (preservedAsText) {
+        idx = end + 2;
+      } else if (closeTrimMode) {
+        // Explicit right-trim disables implicit "skip one newline" behavior.
+        idx = skipWsForwardByMode(end + 2, closeTrimMode);
+      } else {
+        idx = skipOneNewlineAfterControlToken(end + 2);
+      }
     }
   }
 

@@ -284,6 +284,22 @@ Hello {{ user.name }}
 Goodbye</code></pre>
               <p class="muted">In this example, the newline directly after <code>{% if user %}</code> and after <code>{% endif %}</code> is removed, so <code>Hello ...</code> and <code>Goodbye</code> render without extra blank lines.</p>
 
+              <h3 id="whitespace-trimming-markers">Whitespace trimming markers</h3>
+              <p class="muted">All tag types support optional trimming markers in the opening and/or closing delimiter.</p>
+              <ul class="list">
+                <li><code>-</code> trims <strong>all whitespace</strong> (including newlines).</li>
+                <li><code>~</code> trims whitespace but <strong>keeps newlines</strong>.</li>
+              </ul>
+              <ul class="list">
+                <li><code>{{-</code> / <code>{%-</code> / <code>{#-</code> trims whitespace <em>before</em> the tag.</li>
+                <li><code>-}}</code> / <code>-%}</code> / <code>-#}</code> trims whitespace <em>after</em> the tag.</li>
+                <li><code>{{~</code> / <code>{%~</code> / <code>{#~</code> and <code>~}}</code> / <code>~%}</code> / <code>~#}</code> work the same, but do not remove line breaks.</li>
+                <li>Raw interpolations can be combined with trimming markers, e.g. <code>{{-= key -}}</code> and <code>{{~= key ~}}</code>.</li>
+              </ul>
+              <pre class="codeblock"><code class="language-twig">A \n  {{- name -}}  \nB   ->  AXB
+A\n  {{~ name ~}}  \nB    ->  A\nX\nB
+v={{-= html -}}           ->  v=&lt;em&gt;ok&lt;/em&gt;</code></pre>
+
               <h2 id="robustness">Robustness</h2>
               <p class="muted">Malformed or misplaced control tokens degrade to literal text instead of throwing at runtime.</p>
               <p class="muted">In that case, the engine also keeps any following whitespace/newlines unchanged.</p>
@@ -428,6 +444,46 @@ url: /search?q={{ obj | json | urlencode }}</code></pre>
     "q": "ice cream",
     "page": 1
   }
+}</code></pre>
+              <div class="docExample__out">
+                <div class="muted">Output</div>
+                <pre class="output" data-out></pre>
+              </div>
+            </div>
+
+            <div class="docExample" data-example>
+              <div class="docExample__head">
+                <div>
+                  <div class="docExample__title">Whitespace trimming (- / ~)</div>
+                  <div class="muted">Shows left/right trimming with interpolation and control tags.</div>
+                </div>
+                <button class="button button--small" type="button" data-run>Run</button>
+              </div>
+              <pre class="codeblock" data-tpl><code class="language-twig">[- removes newlines]
+A
+  {{- name -}}
+B
+
+[~ keeps newlines]
+A
+  {{~ name ~}}
+B
+
+[raw + trimming]
+v= {{-= html -}}
+end
+
+[control tags]
+X{% if show -%}
+Y{% endif -%}
+Z
+X{%~ if show ~%}
+Y{%~ endif ~%}
+Z</code></pre>
+              <pre class="codeblock" data-data><code class="language-json">{
+  "name": "X",
+  "html": "&lt;em&gt;ok&lt;/em&gt;",
+  "show": true
 }</code></pre>
               <div class="docExample__out">
                 <div class="muted">Output</div>

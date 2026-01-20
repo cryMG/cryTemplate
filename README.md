@@ -337,7 +337,7 @@ Comments can be added using `{# comment #}` blocks:
 
 ## Whitespace handling
 
-cryTemplate performs a small whitespace normalization around control tags to make “block style” templates behave closer to what users typically expect.
+cryTemplate performs by default a small whitespace normalization around control tags to make “block style” templates behave closer to what users typically expect.
 
 Rules:
 
@@ -354,6 +354,28 @@ Example:
 Hello {{ user.name }}
 {% endif %}
 Goodbye
+```
+
+### Whitespace trimming markers
+
+All tag types support optional whitespace trimming markers in the opening and/or closing delimiter:
+
+* `-` trims **all whitespace** (including newlines)
+* `~` trims whitespace but **keeps newlines**
+
+Rules:
+
+* `{{-` / `{%-` / `{#-` trims whitespace *before* the tag
+* `-}}` / `-%}` / `-#}` trims whitespace *after* the tag
+* `{{~` / `{%~` / `{#~` and `~}}` / `~%}` / `~#}` work the same, but do not remove line breaks
+* Raw interpolations can be combined with trimming markers: `{{-= key -}}` and `{{~= key ~}}`
+
+Examples:
+
+```txt
+A \n  {{- name -}}  \nB   ->  AXB
+A\n  {{~ name ~}}  \nB    ->  A\nX\nB
+v={{-= html -}}           ->  v=<em>ok</em>
 ```
 
 ## Filters

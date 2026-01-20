@@ -45,6 +45,7 @@
   "scripts": {
     "prebuild": "rimraf dist/*",
     "build": "tsx scripts/build.ts",
+    "prebuild-pages": "rimraf dist-pages/*",
     "build-pages": "tsx scripts/build-pages.ts",
     "watch": "tsx scripts/build.ts --watch",
     "check": "tsc --noEmit -p tsconfig.dev.json && tsc --noEmit -p scripts/tsconfig.json",
