@@ -71,7 +71,7 @@ export const tplParse = (tpl: string): TplNode[] => {
   const nodesStack: TplNode[][] = [ root ];
   const controlStack: Frame[] = [];
 
-  const reToken = /\{\{|\{%/g;
+  const reToken = /\{\{|\{%|\{#/g;
   let idx = 0;
   while (idx < tpl.length) {
     reToken.lastIndex = idx;
@@ -299,6 +299,16 @@ export const tplParse = (tpl: string): TplNode[] => {
         tplPush(nodesStack, { type: 'text', value: tpl.slice(start, end + 2) });
       }
       idx = end + 2;
+    } else if (m[0] === '{#') {
+      // Comment token
+      const end = tpl.indexOf('#}', start + 2);
+      if (end === -1) {
+        // Unterminated comment: keep the rest as text
+        tplPush(nodesStack, { type: 'text', value: tpl.slice(start) });
+        break;
+      }
+      // Comment is ignored completely (no output)
+      idx = end + 2;
     } else {
       // Control token
       const end = tpl.indexOf('%}', start + 2);
@@ -330,9 +340,6 @@ export const tplParse = (tpl: string): TplNode[] => {
         tplParseEach(raw, tpl.slice(start, end + 2), nodesStack, controlStack, pushTextToken);
       } else if (/^endeach$/i.test(raw)) {
         tplParseEndEach(tpl.slice(start, end + 2), nodesStack, controlStack, pushTextToken);
-      } else if (raw.startsWith('#')) {
-        // Inline comment: ignore completely (no output)
-        // Do nothing (skip adding any node)
       } else {
         // Unknown control -> keep literal
         tplPush(nodesStack, { type: 'text', value: tpl.slice(start, end + 2) });

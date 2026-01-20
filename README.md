@@ -326,15 +326,15 @@ Loops can be nested and combined with conditionals:
 
 ## Comments
 
-Comments can be added using `{%# comment %}` blocks:
+Comments can be added using `{# comment #}` blocks:
 
 ```txt
-{%# This is a comment %}
+{# This is a comment #}
 
-{%#
+{#
   This is also a comment.
   It can span multiple lines.
-%}
+#}
 ```
 
 ## Filters

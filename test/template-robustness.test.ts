@@ -56,16 +56,27 @@ describe('template rendering / robustness', function () {
     assert.strictEqual(renderTemplate(tpl, { a: '1', b: '2', c: '3' }), '123');
   });
 
-  describe('inline comments', function () {
-    it('omits inline comment blocks {%# ... %}', function () {
-      const tpl = 'A{%# this is ignored %}B';
+  describe('comments', function () {
+    it('omits inline comment blocks {# ... #}', function () {
+      const tpl = 'A{# this is ignored #}B';
       assert.strictEqual(renderTemplate(tpl, {}), 'AB');
     });
 
-    it('comment content may include percent brace text safely', function () {
-      const tpl = 'X{%# tricky %} braces %} and text %}Y';
+    it('omits multiline comment blocks {# ... #}', function () {
+      const tpl = 'A{#\nthis\nis\nignored\n#}B';
+      assert.strictEqual(renderTemplate(tpl, {}), 'AB');
+    });
+
+    it('comment content may include brace-like text safely', function () {
+      const tpl = 'X{# tricky #} braces #} and text #}Y';
       // Only the comment block is removed; the rest remains as literal text
-      assert.strictEqual(renderTemplate(tpl, {}), 'X braces %} and text %}Y');
+      assert.strictEqual(renderTemplate(tpl, {}), 'X braces #} and text #}Y');
+    });
+
+    it('comment content may include token-like text safely', function () {
+      const tpl = 'A{# {% if x %} {{ name }} {% end %} #}B';
+      // Only the comment block is removed; the rest remains as literal text
+      assert.strictEqual(renderTemplate(tpl, { x: 1, name: 'Z' }), 'AB');
     });
   });
 });
