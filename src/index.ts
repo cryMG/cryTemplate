@@ -19,7 +19,7 @@ import {
 export {
   tplParse,
   tplRenderNodes,
-} from './template-parser.js';
+};
 
 export {
   escapeHtml,

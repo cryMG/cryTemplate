@@ -6,9 +6,9 @@ No code execution from templates – just string magic with interpolation, contr
 
 [![NPM](https://nodei.co/npm/crytemplate.svg?data=d,s)](https://nodei.co/npm/crytemplate/)
 
-![Test and Release](https://github.com/cryMG/cryTemplate/workflows/Build%20and%20code%20checks/badge.svg)
+![Tests](https://github.com/cryMG/cryTemplate/workflows/Build%20and%20code%20checks/badge.svg)
 
-Infomation and live demo (GitHub Pages): <https://crymg.github.io/cryTemplate/>
+Information and live demo (GitHub Pages): <https://crymg.github.io/cryTemplate/>
 
 ## Why another template parser?
 
@@ -510,7 +510,7 @@ Coerces to string early.
 
 This can be useful for chaining when you want to be explicit about string conversion.
 
-Example: `{{ value | text | replace('x', 'y') }}`
+Example: `{{ value | string | replace('x', 'y') }}`
 
 #### `number(decimals?, decimalSep?, thousandsSep?)`
 
@@ -675,6 +675,10 @@ npm run bench -- --mode=parse+render
 > [!NOTE]
 > "Parsing" is not standardized across engines. Some libraries expose a parser, others only a compile step.
 > The benchmark output is therefore indicative only, and engines differ in features and security model.
+
+## Credits
+
+This project was developed with the assistance of AI tools (e.g., GitHub Copilot/ChatGPT) to optimize code structure and efficiency. All logic has been reviewed and tested by the author.
 
 ## License
 
