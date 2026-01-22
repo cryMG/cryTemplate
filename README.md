@@ -27,6 +27,7 @@ Many existing template engines either allow arbitrary code execution (e.g., via 
 * Filters with a pipe syntax (`{{ value | trim | upper }}`), including `dateformat`
 * Dot-path lookups across a scope stack + simple fallbacks (`||`, `??`)
 * Fail-safe parsing: malformed/unsupported tokens degrade to literal text (no runtime throws)
+* [VSCode Extension](https://marketplace.visualstudio.com/items?itemName=cryeffectMediaGroup.crytemplate-language) for syntax highlighting
 
 ## Usage
 
